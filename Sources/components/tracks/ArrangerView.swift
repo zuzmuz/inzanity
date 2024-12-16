@@ -2,11 +2,11 @@ import SwiftTUI
 
 struct ArrangerView: View {
     @Binding var transportState: TransportState
-    @State var trackListState: [TrackState] = []
+    @Binding var trackListState: [TrackState]
     var body: some View {
         VStack {
-            ForEach(trackListState) { track in
-                TrackView(track: track)
+            ForEach(Array(trackListState.indices), id: \.self) { index in
+                TrackView(track: $trackListState[index])
             }
             addTackButton
         }
@@ -21,11 +21,26 @@ struct ArrangerView: View {
 }
 
 struct TrackView: View {
-    var track: TrackState
+    @Binding var track: TrackState
+    @State var renaming: Bool = false
+    var trackName: String {
+        if track.name.isEmpty {
+            return "track \(track.number)"
+        } else {
+            return track.name
+        }
+    }
     var body: some View {
         HStack {
-            TextField(placeholder: "Track 1") { text in
-                log("track name changed \(text)")
+            if renaming {
+                TextField(placeholder: trackName) { text in
+                    track.name = text
+                    renaming = false
+                }
+            } else {
+                Button(trackName) { 
+                    renaming = true
+                }
             }
         }
     }

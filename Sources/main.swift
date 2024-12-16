@@ -10,7 +10,7 @@ struct ApplicationView: View {
         VStack {
             TransportView(state: $transportState)
             Divider()
-            ArrangerView(transportState: $transportState) //, trackListState: $trackListState)
+            ArrangerView(transportState: $transportState, trackListState: $trackListState)
         }
     }
 }
