@@ -10,6 +10,16 @@ struct TransportState {
     var isLooping: Bool = false
 }
 
+struct TrackState: Identifiable {
+    var id: UInt = 0
+    var number: UInt = 0
+    var name: String = ""
+    var depth: Int = 0
+    var isMuted: Bool = false
+    var isSolo: Bool = false
+    var isArmed: Bool = false
+}
+
 // struct TransportStateKey: EnvironmentKey {
 //     static let defaultValue: Binding<TransportState> = .init(get: { .init() }, set: { defaultValue in 
 //         log("TransportStateKey.defaultValue.set \(defaultValue)")
