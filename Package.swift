@@ -10,6 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../SwiftTUI"),
+        .package(url: "https://github.com/SwiftyLua/SwiftyLua.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -18,6 +19,7 @@ let package = Package(
             name: "inzanity",
             dependencies: [
                 "SwiftTUI",
+                "SwiftyLua",
             ]),
     ]
 )

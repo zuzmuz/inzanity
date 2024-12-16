@@ -1,0 +1,33 @@
+{
+  "originHash" : "1590eea1388eada29fc6417937ac95e43a371fd4957e84b9ce4aa51c8aa75500",
+  "pins" : [
+    {
+      "identity" : "clua",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyLua/CLua",
+      "state" : {
+        "branch" : "main",
+        "revision" : "6cbd08845f9746095cf6ddde426acb5cda8a01ac"
+      }
+    },
+    {
+      "identity" : "lua4swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyLua/lua4swift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7d2cec6ef9abbb3a9325d7bd8fd75928691d94ab"
+      }
+    },
+    {
+      "identity" : "swiftylua",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyLua/SwiftyLua.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "b48ea749f8e31517b420db3bdc506a5d0e22a5a9"
+      }
+    }
+  ],
+  "version" : 3
+}

@@ -3,6 +3,7 @@ import SwiftTUI
 struct TransportView: View {
     @Environment(\.transportIcons) var icons: TransportIcons
     @Binding var state: TransportState
+
     var body: some View {
         HStack {
             Button(state.isPlaying ? icons.pause : icons.play) {
