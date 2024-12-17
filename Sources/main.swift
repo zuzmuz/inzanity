@@ -1,7 +1,6 @@
+import Foundation
 import SwiftTUI
 import SwiftyLua
-import Foundation
-
 
 struct ApplicationView: View {
     @State var transportState: TransportState = .init()
@@ -16,6 +15,8 @@ struct ApplicationView: View {
 }
 
 let config = EnvironmentConfig(luaVM: LuaVM())
-let app = Application(rootView: ApplicationView().environment(\.config, config))
+let app = Application(rootView: ApplicationView().environment(\.config, config)) { text in
+    log("input text: \(text)")
+    return .propagate
+}
 app.start()
-

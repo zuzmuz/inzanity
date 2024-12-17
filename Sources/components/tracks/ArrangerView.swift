@@ -38,7 +38,7 @@ struct TrackView: View {
                     renaming = false
                 }
             } else {
-                Button(trackName) { 
+                Button(trackName) {
                     renaming = true
                 }
             }
