@@ -6,6 +6,8 @@ struct EnvironmentConfig {
 
     enum Key: String {
         case transportIcons = "transport_icons"
+        case timeSignature = "time_signature"
+        case tempo = "tempo"
     }
 
     struct TransportIcons {
@@ -44,12 +46,35 @@ struct EnvironmentConfig {
         }
     }
 
-    var transportIcons: TransportIcons = .init()
+    struct TimeSignature {
+        let numerator: UInt16
+        let denominator: UInt16
+
+        init(from lua: Table? = nil) {
+            let timeSignature = lua?[Key.timeSignature.rawValue] as? Table
+            numerator = timeSignature?[1]as? UInt16 ?? 4
+            denominator = timeSignature?[2] as? UInt16 ?? 4
+            #warning("Consider validating lua configs whith good warning messages")
+        }
+    }
+
+    struct Tempo {
+        let bpm: Double
+
+        init(from lua: Table? = nil) {
+            bpm = lua?[Key.tempo.rawValue] as? Double ?? 120
+        }
+    }
+
+    var transportIcons = TransportIcons()
+    var timeSignature = TimeSignature()
+    var tempo = Tempo()
 
     init() {}
 
     init(luaVM: LuaVM) {
-        if let url = URL.init("scripts/main.lua") {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let url = home.appending(path: ".inzanity/config/init.lua")
             do {
                 switch try luaVM.execute(url: url) {
                     case let .values(values):
@@ -58,13 +83,14 @@ struct EnvironmentConfig {
                             return
                         }
                         transportIcons = TransportIcons(from: configTable[Key.transportIcons.rawValue] as? Table)
+                        timeSignature = TimeSignature(from: configTable[Key.timeSignature.rawValue] as? Table)
+                        tempo = Tempo(from: configTable[Key.tempo.rawValue] as? Table)
                 case let .error(error): 
                     log("Lua Error: \(error)")
                 }
             } catch {
                 log("Error: \(error)")
             }
-        }
     }
 }
 

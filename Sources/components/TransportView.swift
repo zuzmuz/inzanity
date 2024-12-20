@@ -2,17 +2,16 @@ import SwiftTUI
 
 struct TransportView: View {
     @Environment(\.config.transportIcons) var icons: EnvironmentConfig.TransportIcons
-    @Binding var state: TransportState
+    @ObservedObject var transport: Transport
 
     var body: some View {
         HStack {
-            Button(state.isPlaying ? icons.pause : icons.play) {
-                log("play pressed \(state.isPlaying)")
-                state.isPlaying.toggle()
+            Button(transport.playing ? icons.pause : icons.play) {
+                transport.playing.toggle()
             }
             Button(icons.stop) {
                 log("stop pressed")
-                state.isPlaying = false
+                transport.playing = false
             }
             Button(icons.record) {
                 log("record pressed")

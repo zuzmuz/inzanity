@@ -3,20 +3,25 @@ import SwiftTUI
 import SwiftyLua
 
 struct ApplicationView: View {
-    @State var transportState: TransportState = .init()
-    @State var trackListState: [TrackState] = []
+    @ObservedObject var project: Project
     var body: some View {
         VStack {
-            TransportView(state: $transportState)
+            TransportView(transport: project.transport)
             Divider()
-            ArrangerView(transportState: $transportState, trackListState: $trackListState)
+            ArrangerView(transport:project.transport,
+                         trackList: project.trackList,
+                         tempoTrack: project.tempoTrack)
         }
     }
 }
 
 let config = EnvironmentConfig(luaVM: LuaVM())
-let app = Application(rootView: ApplicationView().environment(\.config, config)) { text in
-    log("input text: \(text)")
-    return .propagate
+let project = Project(id: UUID(), config: config)
+let eventHandler = EventHandler(config: config)
+let app = Application(rootView: ApplicationView(
+        project: project
+    ).environment(\.config, config)) { keyPress in
+    
+    return eventHandler.handle(keyPress: keyPress)
 }
 app.start()
