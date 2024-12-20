@@ -5,6 +5,27 @@ class TrackList: ObservableObject {
 }
 
 class Track: Identifiable, ObservableObject {
+
+    struct MidiItem: BoundedEventItem {
+        var position: Tick
+        var duration: Tick
+    }
+    struct AudioItem: BoundedEventItem {
+        var position: Tick
+        var duration: Tick
+        var channels: UInt8
+    }
+    struct AutomationItem: BoundedEventItem {
+        var position: Tick
+        var duration: Tick
+        var value: Double
+    }
+    enum Item {
+        case midi(MidiItem)
+        case audio(AudioItem)
+        case automation(AutomationItem)
+    }
+
     let id: UUID
     @Published var number: UInt
     @Published var name: String
@@ -15,7 +36,7 @@ class Track: Identifiable, ObservableObject {
     @Published var volume: Double = 0.0
     @Published var pan: Double = 0.0
     @Published var fxChain: FxChain = .init()
-    @Published var items: [Item] = []
+    @Published var items: [EventItem] = []
 
     init(id: UUID, number: UInt, name: String) {
         self.id = id
@@ -29,5 +50,4 @@ struct FxChain {
     var plugins: [Plugin] = []
 }
 
-protocol Item {}
 protocol Plugin {}

@@ -9,4 +9,5 @@ class Transport: ObservableObject {
     @Published var playing: Bool = false
     @Published var recording: Bool = false
     @Published var looping: Bool = false
+    @Published var horizontalZoom: UInt16 = 1
 }

@@ -21,7 +21,20 @@ let eventHandler = EventHandler(config: config)
 let app = Application(rootView: ApplicationView(
         project: project
     ).environment(\.config, config)) { keyPress in
-    
-    return eventHandler.handle(keyPress: keyPress)
+
+    let event = eventHandler.handle(keyPress: keyPress)
+
+    switch event {
+        case .propagate(let keyPress):
+            return .propagate(keyPress: keyPress)
+        case let .horizontalZoomIn(motion):
+            project.transport.horizontalZoom += motion
+        case let .horizontalZoomOut(motion):
+            if project.transport.horizontalZoom > motion {
+                project.transport.horizontalZoom -= motion
+            }
+    }
+
+    return .consume
 }
 app.start()
