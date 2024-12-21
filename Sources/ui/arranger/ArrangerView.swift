@@ -8,7 +8,9 @@ struct ArrangerView: View {
 
     var body: some View {
         VStack {
-            TimelineView(tempoTrack: tempoTrack, zoom: transport.horizontalZoom)
+            TimelineView(tempoTrack: tempoTrack,
+                         zoom: transport.horizontalZoom,
+                         offset: transport.horizontalOffset)
             Divider()
         }
     }
@@ -17,6 +19,7 @@ struct ArrangerView: View {
 struct TimelineView: View {
     @ObservedObject var tempoTrack: TempoTrack
     var zoom: UInt16
+    var offset: Double
 
     struct Measure {
         var number: UInt64
@@ -24,10 +27,13 @@ struct TimelineView: View {
         var denominator: UInt16
     }
 
+
     private func measures(width: Extended) -> [Measure] {
         var measures: [Measure] = []
         var measureNumber: UInt64 = 0
-        var accumulatedWidth: Extended = .init(0)
+        var beatNumber: UInt64 = 0
+        var accumulatedWidth: Double = 0
+        
         for region in tempoTrack.regions {
             for _ in 0..<region.numberOfMeasures {
                 measures.append(
@@ -37,8 +43,8 @@ struct TimelineView: View {
                         denominator: region.denominator
                     )
                 )
-                accumulatedWidth = accumulatedWidth + .init(Int(region.numerator * zoom))
-                if accumulatedWidth > width {
+                accumulatedWidth += Double(region.numerator) * Double(zoom) / Double(region.denominator)
+                if Extended(Int(accumulatedWidth.rounded())) > width {
                     return measures
                 }
                 measureNumber += 1

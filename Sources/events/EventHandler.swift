@@ -2,8 +2,16 @@ import SwiftTUI
 
 enum Event {
     case propagate(keyPress: KeyPress)
+
+    // Display events
     case horizontalZoomIn(motion: UInt16)
     case horizontalZoomOut(motion: UInt16)
+    case verticalZoomIn(motion: UInt16)
+    case verticalZoomOut(motion: UInt16)
+    case horizontalOffsetLeft(motion: UInt16)
+    case horizontalOffsetRight(motion: UInt16)
+    case verticalOffsetDown(motion: UInt16)
+    case verticalOffsetUp(motion: UInt16)
 }
 
 class EventHandler {
@@ -36,17 +44,21 @@ class EventHandler {
     private func handleNormalMode(keyPress: KeyPress) -> Event {
         return switch (keyPress.key, keyPress.modifiers) {
         case (.character("h"), []):
-            .propagate(keyPress: KeyPress(key: .left))
+            .horizontalOffsetLeft(motion: 1)
         case (.character("j"), []):
-            .propagate(keyPress: KeyPress(key: .down))
+            .verticalOffsetDown(motion: 1)
         case (.character("k"), []):
-            .propagate(keyPress: KeyPress(key: .up))
+            .verticalOffsetUp(motion: 1)
         case (.character("l"), []):
-            .propagate(keyPress: KeyPress(key: .right))
+            .horizontalOffsetRight(motion: 1)
         case (.character("-"), []):
             .horizontalZoomOut(motion: 1)
-        case (.character("+"), []):
+        case (.character("="), []):
             .horizontalZoomIn(motion: 1)
+        case (.character("_"), []):
+            .verticalZoomOut(motion: 1)
+        case (.character("+"), []):
+            .verticalZoomIn(motion: 1)
         default:
             .propagate(keyPress: keyPress)
         }

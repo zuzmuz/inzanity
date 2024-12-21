@@ -33,6 +33,12 @@ let app = Application(rootView: ApplicationView(
             if project.transport.horizontalZoom > motion {
                 project.transport.horizontalZoom -= motion
             }
+        case let .horizontalOffsetLeft(motion):
+            project.transport.modifyHorizontalOffset(by: Int16(motion))
+        case let .horizontalOffsetRight(motion):
+            project.transport.modifyHorizontalOffset(by: -Int16(motion))
+        default:
+            break
     }
 
     return .consume
