@@ -98,7 +98,7 @@ extension TempoChange: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Tick.self, forKey: .position),
+            position: try container.decode(Ticks.self, forKey: .position),
             tempo: try container.decode(Double.self, forKey: .tempo)
         )
     }
@@ -118,7 +118,7 @@ extension TimeSignatureChange: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Tick.self, forKey: .position),
+            position: try container.decode(Ticks.self, forKey: .position),
             numerator: try container.decode(UInt16.self, forKey: .numerator),
             denominator: try container.decode(UInt16.self, forKey: .denominator)
         )
@@ -190,6 +190,28 @@ extension Track: Codable {
 
 extension Track.Item: Codable {
     enum CodingKeys: CodingKey {
+        case position, duration, source
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            position: try container.decode(Ticks.self, forKey: .position),
+            duration: try container.decode(Ticks.self, forKey: .duration),
+            source: try container.decode(Source.self, forKey: .source)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(position, forKey: .position)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(source, forKey: .source)
+    }
+}
+
+extension Track.Item.Source: Codable {
+    enum CodingKeys: CodingKey {
         case midi, audio
     }
 
@@ -207,13 +229,17 @@ extension Track.Item: Codable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-            case let .midi(midi):
-                try container.encode(midi, forKey: .midi)
-            case let .audio(audio):
-                try container.encode(audio, forKey: .audio)
+        case let .midi(midi):
+            try container.encode(midi, forKey: .midi)
+        case let .audio(audio):
+            try container.encode(audio, forKey: .audio)
+        case let .pattern:
+            fatalError("Pattern items are not supported")
+        case let .automation:
+            fatalError("Automation items are not supported")
         }
     }
 }
@@ -223,19 +249,15 @@ extension MidiItem: Codable {
         case position, duration, midiData
     }
 
-    convenience init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Tick.self, forKey: .position),
-            duration: try container.decode(Tick.self, forKey: .duration),
             midiData: try container.decode(Data.self, forKey: .midiData)
         )
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(position, forKey: .position)
-        try container.encode(duration, forKey: .duration)
         try container.encode(midiData, forKey: .midiData)
     }
 }
@@ -245,12 +267,9 @@ extension AudioItem: Codable {
         case channels, position, duration, fileLocation, positionInFile
     }
 
-    convenience init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            channels: try container.decode(UInt8.self, forKey: .channels),
-            position: try container.decode(Tick.self, forKey: .position),
-            duration: try container.decode(Tick.self, forKey: .duration),
             fileLocation: try container.decode(String.self, forKey: .fileLocation),
             positionInFile: try container.decode(TimeInterval.self, forKey: .positionInFile)
         )
@@ -258,9 +277,6 @@ extension AudioItem: Codable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(channels, forKey: .channels)
-        try container.encode(position, forKey: .position)
-        try container.encode(duration, forKey: .duration)
         try container.encode(fileLocation, forKey: .fileLocation)
         try container.encode(positionInFile, forKey: .positionInFile)
     }

@@ -7,7 +7,7 @@ final class TempoTrack: ObservableObject {
 
     var regions:
         [(
-            position: Tick,
+            position: Ticks,
             numerator: UInt16,
             denominator: UInt16,
             numberOfMeasures: UInt64
@@ -99,16 +99,16 @@ final class TempoTrack: ObservableObject {
 }
 
 struct TempoChange: EventItem {
-    var position: Tick
+    var position: Ticks
     var tempo: SecondsPerWholeNote
     var ramp: Curve = .linear
 
-    init(position: Tick, bpm: Double) {
+    init(position: Ticks, bpm: Double) {
         self.position = position
         self.tempo = 4 * 60 / bpm
     }
 
-    init(position: Tick, tempo: SecondsPerWholeNote) {
+    init(position: Ticks, tempo: SecondsPerWholeNote) {
         self.position = position
         self.tempo = tempo
     }
@@ -119,7 +119,7 @@ struct TempoChange: EventItem {
 }
 
 struct TimeSignatureChange: EventItem {
-    var position: Tick
+    var position: Ticks
     var numerator: UInt16
     var denominator: UInt16
 }

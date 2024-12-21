@@ -1,10 +1,11 @@
 import Foundation
 
 
-typealias Tick = UInt64
+typealias Ticks = UInt64
 typealias SecondsPerWholeNote = Double
+typealias WholeNotes = Double
 
-let ticksPerWholeNote: Tick = 1 << 20
+let ticksPerWholeNote: Ticks = 1 << 20
 
 extension UInt64 {
     func beats(denominator: UInt16) -> UInt64 {
@@ -12,14 +13,14 @@ extension UInt64 {
     }
 }
 
-func time(from position: Tick, with tempo: SecondsPerWholeNote) -> TimeInterval {
+func time(from position: Ticks, with tempo: SecondsPerWholeNote) -> TimeInterval {
     return tempo * TimeInterval(position) / TimeInterval(ticksPerWholeNote)
 }
 
 protocol EventItem {
-    var position: Tick { get set }
+    var position: Ticks { get set }
 }
 
 protocol BoundedEventItem: EventItem {
-    var duration: Tick { get set }
+    var duration: Ticks { get set }
 }

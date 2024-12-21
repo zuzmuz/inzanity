@@ -38,53 +38,53 @@ let project = Project(
         Track(
             id: UUID(), number: 1, name: "track 1",
             items: [
-                .midi(
-                    MidiItem(
-                        position: ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
-                        midiData: Data([0x90, 0x40, 0x7f]))),
-                .midi(
-                    MidiItem(
-                        position: 6 * ticksPerWholeNote, duration: 2 * ticksPerWholeNote,
-                        midiData: Data([0x90, 0x40, 0x7f]))),
-                .midi(
-                    MidiItem(
-                        position: 10 * ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
-                        midiData: Data([0x90, 0x40, 0x7f]))),
+                .init(
+                    position: ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
+                    source: .midi(MidiItem(midiData: Data([0x90, 0x40, 0x7f])))),
+                .init(
+                    position: 6 * ticksPerWholeNote, duration: 2 * ticksPerWholeNote,
+                    source: .midi(MidiItem(midiData: Data([0x90, 0x40, 0x7f])))),
+                .init(
+                    position: 10 * ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
+                    source: .midi(MidiItem(midiData: Data([0x90, 0x40, 0x7f])))),
             ]),
         Track(
             id: UUID(), number: 2, name: "track 2",
             items: [
-                .audio(
-                    .init(
-                        channels: 2, position: 0, duration: 200,
-                        fileLocation: "audio.mp3", positionInFile: TimeInterval(1)))
+                .init(
+                    position: 0, duration: 10 * ticksPerWholeNote,
+                    source: .audio(
+                        AudioItem(fileLocation: "audio.mp3", positionInFile: TimeInterval(1))))
             ]),
     ]))
 let eventHandler = EventHandler(config: config)
-let app = Application(rootView: ApplicationView(
+let app = Application(
+    rootView: ApplicationView(
         project: project
-    ).environment(\.config, config)) { keyPress in
+    ).environment(\.config, config)
+) { keyPress in
 
     let event = eventHandler.handle(keyPress: keyPress)
 
     switch event {
-        case .propagate(let keyPress):
-            return .propagate(keyPress: keyPress)
-        case let .horizontalZoomIn(motion):
-            project.transport.horizontalZoom += motion
-        case let .horizontalZoomOut(motion):
-            if project.transport.horizontalZoom > motion {
-                project.transport.horizontalZoom -= motion
-            }
-        case let .horizontalOffsetLeft(motion):
-            project.transport.modifyHorizontalOffset(by: Int16(motion))
-        case let .horizontalOffsetRight(motion):
-            project.transport.modifyHorizontalOffset(by: -Int16(motion))
-        default:
-            break
+    case .propagate(let keyPress):
+        return .propagate(keyPress: keyPress)
+    case let .horizontalZoomIn(motion):
+        project.transport.horizontalZoom += motion
+    case let .horizontalZoomOut(motion):
+        if project.transport.horizontalZoom > motion {
+            project.transport.horizontalZoom -= motion
+        }
+    case let .horizontalOffsetLeft(motion):
+        project.transport.modifyHorizontalOffset(by: Int16(motion))
+    case let .horizontalOffsetRight(motion):
+        project.transport.modifyHorizontalOffset(by: -Int16(motion))
+    default:
+        break
     }
 
     return .consume
 }
-app.start()
 
+try! project.save(to: URL(fileURLWithPath: "project.yml"))
+app.start()

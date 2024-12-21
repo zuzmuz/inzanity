@@ -19,7 +19,7 @@ struct ArrangerView: View {
                              zoom: transport.horizontalZoom,
                              offset: transport.horizontalOffset)
                 Divider()
-                TrackListView(trackList: trackList)
+                TrackListView(trackList: trackList, zoom: transport.horizontalZoom)
             }
 
         }
@@ -41,15 +41,32 @@ struct TrackHeadListView: View {
 
 struct TrackListView: View {
     @ObservedObject var trackList: TrackList
+    var zoom: UInt16
 
     var body: some View {
         VStack {
             ForEach(trackList.tracks) { track in
-                Text("hii")
+                TrackView(track: track, zoom: zoom)
             }
         }
     }
+}
 
+struct TrackView: View {
+    @ObservedObject var track: Track
+    var zoom: UInt16
+
+    var body: some View {
+        HStack {
+            ForEach(track.regions, id: \.position) { region in
+                if !region.empty {
+                    Text("".padding(
+                        toLength: Int((region.duration * Double(zoom)).rounded()),
+                        withPad: "█", startingAt: 0))
+                }
+            }
+        }
+    }
 }
 
 struct TimelineView: View {
@@ -104,17 +121,24 @@ struct TimelineView: View {
         VStack {
             Text("\(measure.number)")
             Text("|")
-        }.frame(width: .init(Int(measure.numerator * zoom)))
+        }.frame(width: .init(Int((measure.numerator * zoom)/measure.denominator)))
     }
 }
 
 struct TrackHeadView: View {
-    var track: Track
+    @ObservedObject var track: Track
 
     var body: some View {
         HStack {
-            Button(track.name) {
-            }
+            Text(track.name)
+            Spacer()
+            Text(String(format: "%.2f", track.volume))
+            Button("M") {
+                track.muted.toggle()
+            }.background(track.muted ? Color.red : Color.default)
+            Button("S") {
+                track.solo.toggle()
+            }.background(track.solo ? Color.yellow : Color.default)
         }
     }
 }

@@ -10,10 +10,55 @@ final class TrackList: ObservableObject {
 
 final class Track: Identifiable, ObservableObject {
 
-    enum Item {
-        case midi(MidiItem)
-        case audio(AudioItem)
-        // case automation(AutomationItem)
+    final class Item: BoundedEventItem, ObservableObject {
+        @Published var position: Ticks
+        @Published var duration: Ticks
+        var source: Source
+
+        enum Source {
+            case midi(MidiItem)
+            case audio(AudioItem)
+            case pattern
+            case automation
+        }
+
+        init(position: Ticks, duration: Ticks, source: Source) {
+            self.position = position
+            self.duration = duration
+            self.source = source
+        }
+    }
+
+    var regions: [(
+            position: Ticks,
+            duration: WholeNotes,
+            empty: Bool
+        )] {
+        #warning("consider caching")
+        var lastEnd: Ticks = 0
+        var regions:[(
+            position: Ticks,
+            duration: WholeNotes,
+            empty: Bool
+        )] = []
+
+        for item in items {
+            if item.position > lastEnd {
+                regions.append((
+                    position: lastEnd,
+                    duration: WholeNotes(item.position - lastEnd)
+                        / WholeNotes(ticksPerWholeNote),
+                    empty: true
+                ))
+            }
+            regions.append((
+                position: item.position,
+                duration: WholeNotes(item.duration) / WholeNotes(ticksPerWholeNote),
+                empty: false
+            ))
+            lastEnd = item.position + item.duration
+        }
+        return regions
     }
 
     let id: UUID
@@ -36,7 +81,7 @@ final class Track: Identifiable, ObservableObject {
         muted: Bool = false,
         solo: Bool = false,
         armed: Bool = false,
-        volume: Double = 1,
+        volume: Double = 0,
         pan: Double = 0,
         fxChain: FxChain = FxChain(),
         items: [Item] = []
@@ -60,36 +105,13 @@ final class FxChain: ObservableObject {
     @Published var plugins: [Plugin] = []
 }
 
-final class MidiItem: BoundedEventItem, ObservableObject {
-    @Published var position: Tick
-    @Published var duration: Tick
-
+struct MidiItem {
     var midiData: Data
-
-    init(position: Tick, duration: Tick, midiData: Data) {
-        self.position = position
-        self.duration = duration
-        self.midiData = midiData
-    }
 }
 
-final class AudioItem: BoundedEventItem {
-    var channels: UInt8
-    @Published var position: Tick
-    @Published var duration: Tick
-
+struct AudioItem {
     var fileLocation: String
     var positionInFile: TimeInterval
-
-    init(
-        channels: UInt8, position: Tick, duration: Tick, fileLocation: String, positionInFile: TimeInterval
-    ) {
-        self.channels = channels
-        self.position = position
-        self.duration = duration
-        self.fileLocation = fileLocation
-        self.positionInFile = positionInFile
-    }
 }
 
 // class AutomationItem: BoundedEventItem {
