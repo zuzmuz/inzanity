@@ -1,28 +1,59 @@
 import Foundation
 
-class Project: Identifiable, ObservableObject {
+final class Project: Identifiable, ObservableObject {
     let id: UUID
-    var metadata: Metadata
+    var url: URL?
+    @Published var metadata: Metadata
+    @Published var tempoTrack: TempoTrack
     @Published var trackList: TrackList
     @Published var transport: Transport
-    @Published var tempoTrack: TempoTrack
 
     struct Metadata {
         var name: String
+        var author: String?
+        var description: String?
+        var createdDate: Date = Date()
+        var changedDate: Date = Date()
+        var tags: [String]?
     }
 
-    init(id: UUID, config: EnvironmentConfig) {
+    init(
+        id: UUID,
+        metadata: Metadata,
+        tempoTrack: TempoTrack,
+        trackList: TrackList,
+        transport: Transport
+    ) {
         self.id = id
-        metadata = Metadata(name: "Untitled")
-        trackList = TrackList()
-        transport = Transport()
-        tempoTrack = TempoTrack(
-            tempoConfig: config.tempo,
-            timeSignatureConfig: config.timeSignature
+        self.metadata = metadata
+        self.trackList = trackList
+        self.transport = transport
+        self.tempoTrack = tempoTrack
+    }
+
+    convenience init(
+        id: UUID,
+        metadata: Metadata,
+        tempoTrack: TempoTrack
+    ) {
+        self.init(
+            id: id,
+            metadata: metadata,
+            tempoTrack: tempoTrack,
+            trackList: TrackList(),
+            transport: Transport()
         )
     }
 
-    init(load from: URL) {
-        fatalError("Not implemented")
+    convenience init(id: UUID, config: EnvironmentConfig) {
+        self.init(
+            id: id,
+            metadata: Metadata(name: "Untitled", createdDate: Date(), changedDate: Date()),
+            tempoTrack: TempoTrack(
+                tempoConfig: config.tempo,
+                timeSignatureConfig: config.timeSignature
+            ),
+            trackList: TrackList(),
+            transport: Transport())
     }
 }

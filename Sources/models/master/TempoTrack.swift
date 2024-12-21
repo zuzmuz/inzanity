@@ -1,14 +1,18 @@
 import Foundation
 
-class TempoTrack: ObservableObject {
+final class TempoTrack: ObservableObject {
 
     @Published private(set) var tempoChanges: [TempoChange] = []
     @Published private(set) var timeSignatureChanges: [TimeSignatureChange] = []
 
-    var regions: [(position: Tick,
-                   numerator: UInt16,
-                   denominator: UInt16,
-                   numberOfMeasures: UInt64)] {
+    var regions:
+        [(
+            position: Tick,
+            numerator: UInt16,
+            denominator: UInt16,
+            numberOfMeasures: UInt64
+        )]
+    {
 
         #warning("consider caching")
 
@@ -36,6 +40,11 @@ class TempoTrack: ObservableObject {
         }
     }
 
+    init(tempoChanges: [TempoChange], timeSignatureChanges: [TimeSignatureChange]) {
+        self.tempoChanges = tempoChanges
+        self.timeSignatureChanges = timeSignatureChanges
+    }
+
     init(
         tempoConfig: EnvironmentConfig.Tempo,
         timeSignatureConfig: EnvironmentConfig.TimeSignature
@@ -56,7 +65,7 @@ class TempoTrack: ObservableObject {
             TimeSignatureChange(
                 position: 12 * ticksPerWholeNote,
                 numerator: 5,
-                denominator: 4)
+                denominator: 4),
         ]
     }
 
@@ -71,8 +80,9 @@ class TempoTrack: ObservableObject {
             if next.position <= position {
                 switch current.ramp {
                 case .jump:
-                    result += time(from: next.position - current.position, 
-                                                               with: current.tempo)
+                    result += time(
+                        from: next.position - current.position,
+                        with: current.tempo)
                 case .linear:
                     fatalError("Linear curves not implemented")
                 case .bezier:
@@ -81,8 +91,9 @@ class TempoTrack: ObservableObject {
             } else if current.position <= position {
                 switch current.ramp {
                 case .jump:
-                    result += time(from: position - current.position,
-                                                               with: current.tempo)
+                    result += time(
+                        from: position - current.position,
+                        with: current.tempo)
                 case .linear:
                     fatalError("Linear curves not implemented")
                 case .bezier:

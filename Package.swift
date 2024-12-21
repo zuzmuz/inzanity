@@ -11,6 +11,7 @@ let package = Package(
     dependencies: [
         .package(path: "../SwiftTUI"),
         .package(url: "https://github.com/SwiftyLua/SwiftyLua.git", branch: "main"),
+        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -20,6 +21,7 @@ let package = Package(
             dependencies: [
                 "SwiftTUI",
                 "SwiftyLua",
+                "Yams",
             ]),
     ]
 )
