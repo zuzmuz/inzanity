@@ -55,30 +55,40 @@ final class Track: Identifiable, ObservableObject {
     }
 }
 
-class FxChain: ObservableObject {
+final class FxChain: ObservableObject {
     @Published var bypassed: Bool = false
     @Published var plugins: [Plugin] = []
 }
 
-class MidiItem: BoundedEventItem, ObservableObject {
+final class MidiItem: BoundedEventItem, ObservableObject {
     @Published var position: Tick
     @Published var duration: Tick
 
-    required init(position: Tick, duration: Tick) {
+    var midiData: Data
+
+    init(position: Tick, duration: Tick, midiData: Data) {
         self.position = position
         self.duration = duration
+        self.midiData = midiData
     }
 }
 
-class AudioItem: BoundedEventItem {
+final class AudioItem: BoundedEventItem {
     var channels: UInt8
     @Published var position: Tick
     @Published var duration: Tick
 
-    required init(channels: UInt8, position: Tick, duration: Tick) {
+    var url: URL
+    var positionInFile: TimeInterval
+
+    init(
+        channels: UInt8, position: Tick, duration: Tick, url: URL, positionInFile: TimeInterval
+    ) {
         self.channels = channels
         self.position = position
         self.duration = duration
+        self.url = url
+        self.positionInFile = positionInFile
     }
 }
 

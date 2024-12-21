@@ -64,8 +64,27 @@ let project = Project(
             TimeSignatureChange(position: 100, numerator: 3, denominator: 4),
         ]),
     trackList: TrackList(tracks: [
-        Track(id: UUID(), number: 1, name: "track 1"),
-        Track(id: UUID(), number: 2, name: "track 2"),
+        Track(
+            id: UUID(), number: 1, name: "track 1",
+            items: [
+                .midi(
+                    MidiItem(
+                        position: 10, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+                .midi(
+                    MidiItem(
+                        position: 1010, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+                .midi(
+                    MidiItem(
+                        position: 2010, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+            ]),
+        Track(
+            id: UUID(), number: 2, name: "track 2",
+            items: [
+                .audio(
+                    .init(
+                        channels: 2, position: 0, duration: 200,
+                        url: URL(fileURLWithPath: "audio.mp3"), positionInFile: TimeInterval(1)))
+            ]),
     ]))
 
 try! project.save(

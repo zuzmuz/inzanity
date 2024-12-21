@@ -184,7 +184,85 @@ extension Track: Codable {
         try container.encode(volume, forKey: .volume)
         try container.encode(pan, forKey: .pan)
         // try container.encode(fxChain, forKey: .fxChain)
-        // try container.encode(items, forKey: .items)
+        try container.encode(items, forKey: .items)
+    }
+}
+
+extension Track.Item: Codable {
+    enum CodingKeys: CodingKey {
+        case midi, audio
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let midi = try container.decodeIfPresent(MidiItem.self, forKey: .midi) {
+            self = .midi(midi)
+        } else if let audio = try container.decodeIfPresent(AudioItem.self, forKey: .audio) {
+            self = .audio(audio)
+        } else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: container.codingPath,
+                    debugDescription: "Invalid item type"))
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+            case let .midi(midi):
+                try container.encode(midi, forKey: .midi)
+            case let .audio(audio):
+                try container.encode(audio, forKey: .audio)
+        }
+    }
+}
+
+extension MidiItem: Codable {
+    enum CodingKeys: CodingKey {
+        case position, duration, midiData
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            position: try container.decode(Tick.self, forKey: .position),
+            duration: try container.decode(Tick.self, forKey: .duration),
+            midiData: try container.decode(Data.self, forKey: .midiData)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(position, forKey: .position)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(midiData, forKey: .midiData)
+    }
+}
+
+extension AudioItem: Codable {
+    enum CodingKeys: CodingKey {
+        case channels, position, duration, url, positionInFile
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            channels: try container.decode(UInt8.self, forKey: .channels),
+            position: try container.decode(Tick.self, forKey: .position),
+            duration: try container.decode(Tick.self, forKey: .duration),
+            url: try container.decode(URL.self, forKey: .url),
+            positionInFile: try container.decode(TimeInterval.self, forKey: .positionInFile)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(channels, forKey: .channels)
+        try container.encode(position, forKey: .position)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(url, forKey: .url)
+        try container.encode(positionInFile, forKey: .positionInFile)
     }
 }
 
