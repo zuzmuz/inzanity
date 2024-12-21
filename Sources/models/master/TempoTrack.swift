@@ -58,14 +58,6 @@ final class TempoTrack: ObservableObject {
                 position: 0,
                 numerator: timeSignatureConfig.numerator,
                 denominator: timeSignatureConfig.denominator),
-            TimeSignatureChange(
-                position: 4 * ticksPerWholeNote,
-                numerator: 3,
-                denominator: 4),
-            TimeSignatureChange(
-                position: 12 * ticksPerWholeNote,
-                numerator: 5,
-                denominator: 4),
         ]
     }
 

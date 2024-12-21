@@ -7,13 +7,49 @@ struct ArrangerView: View {
     @ObservedObject var tempoTrack: TempoTrack
 
     var body: some View {
-        VStack {
-            TimelineView(tempoTrack: tempoTrack,
-                         zoom: transport.horizontalZoom,
-                         offset: transport.horizontalOffset)
+        HStack {
+            VStack {
+                Text("").frame(height: 2)
+                Divider()
+                TrackHeadListView(trackList: trackList)
+            }.frame(width: 20)
             Divider()
+            VStack {
+                TimelineView(tempoTrack: tempoTrack,
+                             zoom: transport.horizontalZoom,
+                             offset: transport.horizontalOffset)
+                Divider()
+                TrackListView(trackList: trackList)
+            }
+
+        }
+
+    }
+}
+
+struct TrackHeadListView: View {
+    @ObservedObject var trackList: TrackList
+
+    var body: some View {
+        VStack {
+            ForEach(trackList.tracks) { track in
+                TrackHeadView(track: track)
+            }
         }
     }
+}
+
+struct TrackListView: View {
+    @ObservedObject var trackList: TrackList
+
+    var body: some View {
+        VStack {
+            ForEach(trackList.tracks) { track in
+                Text("hii")
+            }
+        }
+    }
+
 }
 
 struct TimelineView: View {

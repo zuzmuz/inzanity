@@ -16,36 +16,7 @@ struct ApplicationView: View {
     }
 }
 
-// let config = EnvironmentConfig(luaVM: LuaVM())
-// let project = Project(id: UUID(), config: config)
-// let eventHandler = EventHandler(config: config)
-// let app = Application(rootView: ApplicationView(
-//         project: project
-//     ).environment(\.config, config)) { keyPress in
-//
-//     let event = eventHandler.handle(keyPress: keyPress)
-//
-//     switch event {
-//         case .propagate(let keyPress):
-//             return .propagate(keyPress: keyPress)
-//         case let .horizontalZoomIn(motion):
-//             project.transport.horizontalZoom += motion
-//         case let .horizontalZoomOut(motion):
-//             if project.transport.horizontalZoom > motion {
-//                 project.transport.horizontalZoom -= motion
-//             }
-//         case let .horizontalOffsetLeft(motion):
-//             project.transport.modifyHorizontalOffset(by: Int16(motion))
-//         case let .horizontalOffsetRight(motion):
-//             project.transport.modifyHorizontalOffset(by: -Int16(motion))
-//         default:
-//             break
-//     }
-//
-//     return .consume
-// }
-// app.start()
-
+let config = EnvironmentConfig(luaVM: LuaVM())
 let project = Project(
     id: UUID(),
     metadata: .init(
@@ -56,12 +27,12 @@ let project = Project(
         changedDate: Date()),
     tempoTrack: TempoTrack(
         tempoChanges: [
-            TempoChange(position: 0, bpm: 120),
-            TempoChange(position: 100, bpm: 140),
+            TempoChange(position: 0, bpm: 120)
+            // TempoChange(position: 100, bpm: 140),
         ],
         timeSignatureChanges: [
-            TimeSignatureChange(position: 0, numerator: 4, denominator: 4),
-            TimeSignatureChange(position: 100, numerator: 3, denominator: 4),
+            TimeSignatureChange(position: 0, numerator: 4, denominator: 4)
+            // TimeSignatureChange(position: 100, numerator: 3, denominator: 4),
         ]),
     trackList: TrackList(tracks: [
         Track(
@@ -69,13 +40,16 @@ let project = Project(
             items: [
                 .midi(
                     MidiItem(
-                        position: 10, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+                        position: ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
+                        midiData: Data([0x90, 0x40, 0x7f]))),
                 .midi(
                     MidiItem(
-                        position: 1010, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+                        position: 6 * ticksPerWholeNote, duration: 2 * ticksPerWholeNote,
+                        midiData: Data([0x90, 0x40, 0x7f]))),
                 .midi(
                     MidiItem(
-                        position: 2010, duration: 1000, midiData: Data([0x90, 0x40, 0x7f]))),
+                        position: 10 * ticksPerWholeNote, duration: 4 * ticksPerWholeNote,
+                        midiData: Data([0x90, 0x40, 0x7f]))),
             ]),
         Track(
             id: UUID(), number: 2, name: "track 2",
@@ -83,9 +57,34 @@ let project = Project(
                 .audio(
                     .init(
                         channels: 2, position: 0, duration: 200,
-                        url: URL(fileURLWithPath: "audio.mp3"), positionInFile: TimeInterval(1)))
+                        fileLocation: "audio.mp3", positionInFile: TimeInterval(1)))
             ]),
     ]))
+let eventHandler = EventHandler(config: config)
+let app = Application(rootView: ApplicationView(
+        project: project
+    ).environment(\.config, config)) { keyPress in
 
-try! project.save(
-    to: try! URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/project.yml"))
+    let event = eventHandler.handle(keyPress: keyPress)
+
+    switch event {
+        case .propagate(let keyPress):
+            return .propagate(keyPress: keyPress)
+        case let .horizontalZoomIn(motion):
+            project.transport.horizontalZoom += motion
+        case let .horizontalZoomOut(motion):
+            if project.transport.horizontalZoom > motion {
+                project.transport.horizontalZoom -= motion
+            }
+        case let .horizontalOffsetLeft(motion):
+            project.transport.modifyHorizontalOffset(by: Int16(motion))
+        case let .horizontalOffsetRight(motion):
+            project.transport.modifyHorizontalOffset(by: -Int16(motion))
+        default:
+            break
+    }
+
+    return .consume
+}
+app.start()
+

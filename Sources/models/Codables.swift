@@ -242,7 +242,7 @@ extension MidiItem: Codable {
 
 extension AudioItem: Codable {
     enum CodingKeys: CodingKey {
-        case channels, position, duration, url, positionInFile
+        case channels, position, duration, fileLocation, positionInFile
     }
 
     convenience init(from decoder: Decoder) throws {
@@ -251,7 +251,7 @@ extension AudioItem: Codable {
             channels: try container.decode(UInt8.self, forKey: .channels),
             position: try container.decode(Tick.self, forKey: .position),
             duration: try container.decode(Tick.self, forKey: .duration),
-            url: try container.decode(URL.self, forKey: .url),
+            fileLocation: try container.decode(String.self, forKey: .fileLocation),
             positionInFile: try container.decode(TimeInterval.self, forKey: .positionInFile)
         )
     }
@@ -261,7 +261,7 @@ extension AudioItem: Codable {
         try container.encode(channels, forKey: .channels)
         try container.encode(position, forKey: .position)
         try container.encode(duration, forKey: .duration)
-        try container.encode(url, forKey: .url)
+        try container.encode(fileLocation, forKey: .fileLocation)
         try container.encode(positionInFile, forKey: .positionInFile)
     }
 }

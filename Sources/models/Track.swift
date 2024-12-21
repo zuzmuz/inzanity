@@ -78,16 +78,16 @@ final class AudioItem: BoundedEventItem {
     @Published var position: Tick
     @Published var duration: Tick
 
-    var url: URL
+    var fileLocation: String
     var positionInFile: TimeInterval
 
     init(
-        channels: UInt8, position: Tick, duration: Tick, url: URL, positionInFile: TimeInterval
+        channels: UInt8, position: Tick, duration: Tick, fileLocation: String, positionInFile: TimeInterval
     ) {
         self.channels = channels
         self.position = position
         self.duration = duration
-        self.url = url
+        self.fileLocation = fileLocation
         self.positionInFile = positionInFile
     }
 }
