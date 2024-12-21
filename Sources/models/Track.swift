@@ -1,77 +1,90 @@
 import Foundation
 
-class TrackList: ObservableObject {
-    @Published var tracks: [Track] = []
+final class TrackList: ObservableObject {
+    @Published var tracks: [Track]
+
+    init(tracks: [Track] = []) {
+        self.tracks = tracks
+    }
 }
 
-class Track: Identifiable, ObservableObject {
+final class Track: Identifiable, ObservableObject {
 
-    struct MidiItem: BoundedEventItem {
-        var position: Tick
-        var duration: Tick
-    }
-    struct AudioItem: BoundedEventItem {
-        var position: Tick
-        var duration: Tick
-        var channels: UInt8
-    }
-    struct AutomationItem: BoundedEventItem {
-        var position: Tick
-        var duration: Tick
-        var value: Double
-    }
     enum Item {
         case midi(MidiItem)
         case audio(AudioItem)
-        case automation(AutomationItem)
+        // case automation(AutomationItem)
     }
 
     let id: UUID
     @Published var number: UInt
     @Published var name: String
-    @Published var depth: Int = 0
-    @Published var muted: Bool = false
-    @Published var solo: Bool = false
-    @Published var armed: Bool = false
-    @Published var volume: Double = 0.0
-    @Published var pan: Double = 0.0
-    @Published var fxChain: FxChain = .init()
-    @Published var items: [Item] = []
+    @Published var depth: Int
+    @Published var muted: Bool
+    @Published var solo: Bool
+    @Published var armed: Bool
+    @Published var volume: Double
+    @Published var pan: Double
+    @Published var fxChain: FxChain
+    @Published var items: [Item]
 
-    init(id: UUID, number: UInt, name: String) {
+    init(
+        id: UUID,
+        number: UInt,
+        name: String,
+        depth: Int = 0,
+        muted: Bool = false,
+        solo: Bool = false,
+        armed: Bool = false,
+        volume: Double = 1,
+        pan: Double = 0,
+        fxChain: FxChain = FxChain(),
+        items: [Item] = []
+    ) {
         self.id = id
         self.number = number
         self.name = name
+        self.depth = depth
+        self.muted = muted
+        self.solo = solo
+        self.armed = armed
+        self.volume = volume
+        self.pan = pan
+        self.fxChain = fxChain
+        self.items = items
     }
 }
 
-// extension Track: Codable {
-//     enum CodingKeys: String, CodingKey {
-//         case id, number, name, depth, muted, solo, armed, volume, pan, fxChain, items
-//     }
-//     required init(from decoder: Decoder) throws {
-//         let container = try decoder.container(keyedBy: CodingKeys.self)
-//         id = try container.decode(UUID.self, forKey: .id)
-//         number = try container.decode(UInt.self, forKey: .number)
-//         name = try container.decode(String.self, forKey: .name)
-//         depth = try container.decode(Int.self, forKey: .depth)
-//         muted = try container.decode(Bool.self, forKey: .muted)
-//         solo = try container.decode(Bool.self, forKey: .solo)
-//         armed = try container.decode(Bool.self, forKey: .armed)
-//         volume = try container.decode(Double.self, forKey: .volume)
-//         pan = try container.decode(Double.self, forKey: .pan)
-//         // fxChain = try container.decode(FxChain.self, forKey: .fxChain)
-//         // items = try container.decode([Item].self, forKey: .items)
-//     }
-//     
-//     func encode(to encoder: Encoder) throws {
-//         fatalError("Not implemented")
-//     }
-// }
-//
-struct FxChain {
-    var bypassed: Bool = false
-    var plugins: [Plugin] = []
+class FxChain: ObservableObject {
+    @Published var bypassed: Bool = false
+    @Published var plugins: [Plugin] = []
 }
+
+class MidiItem: BoundedEventItem, ObservableObject {
+    @Published var position: Tick
+    @Published var duration: Tick
+
+    required init(position: Tick, duration: Tick) {
+        self.position = position
+        self.duration = duration
+    }
+}
+
+class AudioItem: BoundedEventItem {
+    var channels: UInt8
+    @Published var position: Tick
+    @Published var duration: Tick
+
+    required init(channels: UInt8, position: Tick, duration: Tick) {
+        self.channels = channels
+        self.position = position
+        self.duration = duration
+    }
+}
+
+// class AutomationItem: BoundedEventItem {
+//     var position: Tick
+//     var duration: Tick
+// }
 
 protocol Plugin {}

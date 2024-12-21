@@ -23,5 +23,4 @@ class Transport: ObservableObject {
     func modifyVerticalOffset(by motion: Int16) {
         verticalOffset += Double(motion) / Double(self.verticalOffset)
     }
-
 }

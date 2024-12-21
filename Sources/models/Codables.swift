@@ -3,7 +3,7 @@ import Yams
 
 extension Project: Codable {
     enum CodingKeys: CodingKey {
-        case id, metadata, tempoTrack//, trackList, transport
+        case id, metadata, tempoTrack, trackList
     }
 
     convenience init(from decoder: Decoder) throws {
@@ -11,7 +11,8 @@ extension Project: Codable {
         self.init(
             id: try container.decode(UUID.self, forKey: .id),
             metadata: try container.decode(Metadata.self, forKey: .metadata),
-            tempoTrack: try container.decode(TempoTrack.self, forKey: .tempoTrack)
+            tempoTrack: try container.decode(TempoTrack.self, forKey: .tempoTrack),
+            trackList: try container.decode(TrackList.self, forKey: .trackList)
         )
     }
 
@@ -20,6 +21,7 @@ extension Project: Codable {
         try container.encode(id, forKey: .id)
         try container.encode(metadata, forKey: .metadata)
         try container.encode(tempoTrack, forKey: .tempoTrack)
+        try container.encode(trackList, forKey: .trackList)
     }
 
     func save(to url: URL) throws {
@@ -27,7 +29,7 @@ extension Project: Codable {
         let yaml = try encoder.encode(self)
         try yaml.write(to: url, atomically: true, encoding: .utf8)
     }
-    
+
     static func load(from url: URL) throws -> Project {
         let yaml = try String(contentsOf: url, encoding: .utf8)
         let decoder = YAMLDecoder()
@@ -67,7 +69,6 @@ extension Project.Metadata: Codable {
     }
 }
 
-
 extension TempoTrack: Codable {
     enum CodingKeys: CodingKey {
         case tempoChanges, timeSignatureChanges
@@ -77,7 +78,8 @@ extension TempoTrack: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             tempoChanges: try container.decode([TempoChange].self, forKey: .tempoChanges),
-            timeSignatureChanges: try container.decode([TimeSignatureChange].self, forKey: .timeSignatureChanges)
+            timeSignatureChanges: try container.decode(
+                [TimeSignatureChange].self, forKey: .timeSignatureChanges)
         )
     }
 
@@ -129,3 +131,80 @@ extension TimeSignatureChange: Codable {
         try container.encode(denominator, forKey: .denominator)
     }
 }
+
+extension TrackList: Codable {
+    enum CodingKeys: CodingKey {
+        case tracks
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            tracks: try container.decode([Track].self, forKey: .tracks)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(tracks, forKey: .tracks)
+    }
+}
+
+extension Track: Codable {
+    enum CodingKeys: CodingKey {
+        case id, number, name, depth, muted, solo, armed, volume, pan, fxChain, items
+    }
+
+    convenience init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(UUID.self, forKey: .id),
+            number: try container.decode(UInt.self, forKey: .number),
+            name: try container.decode(String.self, forKey: .name),
+            depth: try container.decode(Int.self, forKey: .depth),
+            muted: try container.decode(Bool.self, forKey: .muted),
+            solo: try container.decode(Bool.self, forKey: .solo),
+            armed: try container.decode(Bool.self, forKey: .armed),
+            volume: try container.decode(Double.self, forKey: .volume),
+            pan: try container.decode(Double.self, forKey: .pan)
+            // fxChain: try container.decode(FxChain.self, forKey: .fxChain),
+            // items: try container.decode([Item].self, forKey: .items)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(number, forKey: .number)
+        try container.encode(name, forKey: .name)
+        try container.encode(depth, forKey: .depth)
+        try container.encode(muted, forKey: .muted)
+        try container.encode(solo, forKey: .solo)
+        try container.encode(armed, forKey: .armed)
+        try container.encode(volume, forKey: .volume)
+        try container.encode(pan, forKey: .pan)
+        // try container.encode(fxChain, forKey: .fxChain)
+        // try container.encode(items, forKey: .items)
+    }
+}
+
+// extension FxChain: Codable {
+//     enum CodingKeys: CodingKey {
+//         case bypassed, plugins
+//     }
+//
+//     convenience init(from decoder: Decoder) throws {
+//         let container = try decoder.container(keyedBy: CodingKeys.self)
+//         self.init(
+//             bypassed: try container.decode(Bool.self, forKey: .bypassed),
+//             plugins: try container.decode([Plugin].self, forKey: .plugins)
+//         )
+//     }
+//
+//     func encode(to encoder: Encoder) throws {
+//         var container = encoder.container(keyedBy: CodingKeys.self)
+//         try container.encode(bypassed, forKey: .bypassed)
+//         try container.encode(plugins, forKey: .plugins)
+//     }
+// }
+

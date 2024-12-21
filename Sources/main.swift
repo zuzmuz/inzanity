@@ -62,7 +62,11 @@ let project = Project(
         timeSignatureChanges: [
             TimeSignatureChange(position: 0, numerator: 4, denominator: 4),
             TimeSignatureChange(position: 100, numerator: 3, denominator: 4),
-        ]))
+        ]),
+    trackList: TrackList(tracks: [
+        Track(id: UUID(), number: 1, name: "track 1"),
+        Track(id: UUID(), number: 2, name: "track 2"),
+    ]))
 
 try! project.save(
     to: try! URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/project.yml"))

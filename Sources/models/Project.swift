@@ -22,27 +22,13 @@ final class Project: Identifiable, ObservableObject {
         metadata: Metadata,
         tempoTrack: TempoTrack,
         trackList: TrackList,
-        transport: Transport
+        transport: Transport = Transport()
     ) {
         self.id = id
         self.metadata = metadata
         self.trackList = trackList
         self.transport = transport
         self.tempoTrack = tempoTrack
-    }
-
-    convenience init(
-        id: UUID,
-        metadata: Metadata,
-        tempoTrack: TempoTrack
-    ) {
-        self.init(
-            id: id,
-            metadata: metadata,
-            tempoTrack: tempoTrack,
-            trackList: TrackList(),
-            transport: Transport()
-        )
     }
 
     convenience init(id: UUID, config: EnvironmentConfig) {
