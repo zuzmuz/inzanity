@@ -57,13 +57,10 @@ struct TrackView: View {
     var zoom: UInt16
 
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             ForEach(track.regions, id: \.position) { region in
-                if !region.empty {
-                    Text("".padding(
-                        toLength: Int((region.duration * Double(zoom)).rounded()),
-                        withPad: "█", startingAt: 0))
-                }
+                Text(String(repeating: region.empty ? " " : "▄",
+                            count: Int((region.duration * Double(zoom)).rounded())))
             }
         }
     }
@@ -108,7 +105,7 @@ struct TimelineView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            HStack {
+            HStack(spacing: 0) {
                 let measures = measures(width: geometry.width)
                 ForEach(measures, id: \.number) { measure in
                     measureView(measure: measure)
@@ -120,7 +117,7 @@ struct TimelineView: View {
     func measureView(measure: Measure) -> some View {
         VStack {
             Text("\(measure.number)")
-            Text("|")
+            Text("▏")
         }.frame(width: .init(Int((measure.numerator * zoom)/measure.denominator)))
     }
 }
