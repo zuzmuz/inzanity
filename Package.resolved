@@ -1,5 +1,5 @@
 {
-  "originHash" : "414c95dd51f9e9d8a8b6d5dd8c0947d8a460cc2ade0be0416c7826bf11a2e8da",
+  "originHash" : "65656890a575a600d83cdc333329ac24740683f09dc27f063389e0860555acc2",
   "pins" : [
     {
       "identity" : "clua",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "6cbd08845f9746095cf6ddde426acb5cda8a01ac"
+      }
+    },
+    {
+      "identity" : "logger",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zuzmuz/logger.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "b152cc4e3e1c5d5e865bea41e8c47d950fa69242"
       }
     },
     {

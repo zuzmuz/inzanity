@@ -1,0 +1,58 @@
+id: 4514926E-D654-4333-8C28-4E627668644B
+metadata:
+  name: masterpiece
+  author: zaher
+  createdDate: 2024-12-23T14:22:50.739598989Z
+  changedDate: 2024-12-23T14:22:50.739598989Z
+  description: a masterpiece
+tempoTrack:
+  tempoChanges:
+  - position: 0
+    tempo: 2e+0
+  timeSignatureChanges:
+  - position: 0
+    numerator: 4
+    denominator: 4
+trackList:
+  tracks:
+  - id: B2940AFF-2BED-4DE9-8E0A-169BB09F0B0C
+    number: 1
+    name: track 1
+    depth: 0
+    muted: false
+    solo: false
+    armed: false
+    volume: 0e+0
+    pan: 0e+0
+    items:
+    - position: 1048576
+      duration: 4194304
+      source:
+        midi:
+          midiData: kEB/
+    - position: 6291456
+      duration: 2097152
+      source:
+        midi:
+          midiData: kEB/
+    - position: 10485760
+      duration: 4194304
+      source:
+        midi:
+          midiData: kEB/
+  - id: 5A1195A0-A014-4A1A-A833-A632CEBC744D
+    number: 2
+    name: track 2
+    depth: 0
+    muted: false
+    solo: false
+    armed: false
+    volume: 0e+0
+    pan: 0e+0
+    items:
+    - position: 0
+      duration: 10485760
+      source:
+        audio:
+          fileLocation: audio.mp3
+          positionInFile: 1e+0

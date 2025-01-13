@@ -114,9 +114,4 @@ struct AudioItem {
     var positionInFile: TimeInterval
 }
 
-// class AutomationItem: BoundedEventItem {
-//     var position: Tick
-//     var duration: Tick
-// }
-
 protocol Plugin {}

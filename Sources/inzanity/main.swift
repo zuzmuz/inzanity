@@ -1,6 +1,7 @@
 import Foundation
 import SwiftTUI
 import SwiftyLua
+import logger
 
 struct ApplicationView: View {
     @ObservedObject var project: Project
@@ -15,7 +16,7 @@ struct ApplicationView: View {
         }
     }
 }
-
+let logger = FileLogger()
 let config = EnvironmentConfig(luaVM: LuaVM())
 let project = Project(
     id: UUID(),
@@ -85,6 +86,8 @@ let app = Application(
 
     return .consume
 }
+
+let audioEngine = AudioEngine()
 
 try! project.save(to: URL(fileURLWithPath: "project.yml"))
 app.start()

@@ -10,6 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../SwiftTUI"),
+        .package(url: "https://github.com/zuzmuz/logger.git", branch: "master"),
         .package(url: "https://github.com/SwiftyLua/SwiftyLua.git", branch: "main"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0")
     ],
@@ -22,6 +23,7 @@ let package = Package(
                 "SwiftTUI",
                 "SwiftyLua",
                 "Yams",
+                "logger"
             ]),
     ]
 )
