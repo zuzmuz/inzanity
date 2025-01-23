@@ -11,8 +11,8 @@ final class TrackList: ObservableObject {
 final class Track: Identifiable, ObservableObject {
 
     final class Item: BoundedEventItem, ObservableObject {
-        @Published var position: Ticks
-        @Published var duration: Ticks
+        @Published var position: Tick
+        @Published var duration: Tick
         var source: Source
 
         enum Source {
@@ -22,7 +22,7 @@ final class Track: Identifiable, ObservableObject {
             case automation
         }
 
-        init(position: Ticks, duration: Ticks, source: Source) {
+        init(position: Tick, duration: Tick, source: Source) {
             self.position = position
             self.duration = duration
             self.source = source
@@ -30,15 +30,15 @@ final class Track: Identifiable, ObservableObject {
     }
 
     var regions: [(
-            position: Ticks,
-            duration: WholeNotes,
+            position: Tick,
+            duration: Tick,
             empty: Bool
         )] {
         #warning("consider caching")
-        var lastEnd: Ticks = 0
+        var lastEnd: Tick = Tick(value: 0)
         var regions:[(
-            position: Ticks,
-            duration: WholeNotes,
+            position: Tick,
+            duration: Tick,
             empty: Bool
         )] = []
 
@@ -46,14 +46,13 @@ final class Track: Identifiable, ObservableObject {
             if item.position > lastEnd {
                 regions.append((
                     position: lastEnd,
-                    duration: WholeNotes(item.position - lastEnd)
-                        / WholeNotes(ticksPerWholeNote),
+                    duration: item.position - lastEnd,
                     empty: true
                 ))
             }
             regions.append((
                 position: item.position,
-                duration: WholeNotes(item.duration) / WholeNotes(ticksPerWholeNote),
+                duration: item.duration,
                 empty: false
             ))
             lastEnd = item.position + item.duration

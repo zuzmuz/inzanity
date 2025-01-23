@@ -7,7 +7,7 @@ final class TempoTrack: ObservableObject {
 
     var regions:
         [(
-            position: Ticks,
+            position: Tick,
             numerator: UInt16,
             denominator: UInt16,
             numberOfMeasures: UInt64
@@ -18,12 +18,12 @@ final class TempoTrack: ObservableObject {
 
         var timeSignatureChanges = self.timeSignatureChanges
         guard let last = timeSignatureChanges.last else {
-            return [(0, 4, 4, .max)]
+            return [(Tick(value: 0), 4, 4, .max)]
         }
 
         timeSignatureChanges.append(
             TimeSignatureChange(
-                position: .max,
+                position: Tick(value: .max),
                 numerator: last.numerator,
                 denominator: last.denominator
             )
@@ -51,11 +51,13 @@ final class TempoTrack: ObservableObject {
     ) {
 
         tempoChanges = [
-            TempoChange(position: 0, bpm: tempoConfig.bpm)
+            TempoChange(
+                position: Tick(value: 0),
+                tempo: Tempo(bpm: tempoConfig.bpm, denominator: .quarter))
         ]
         timeSignatureChanges = [
             TimeSignatureChange(
-                position: 0,
+                position: Tick(value: 0),
                 numerator: timeSignatureConfig.numerator,
                 denominator: timeSignatureConfig.denominator),
         ]
@@ -63,18 +65,16 @@ final class TempoTrack: ObservableObject {
 
     func add(tempoChange: TempoChange) {
         tempoChanges.append(tempoChange)
-        tempoChanges.sort { $0.position < $1.position }
+        tempoChanges.sort { $0.position.value < $1.position.value }
     }
 
-    private func getTime(from position: UInt64) -> TimeInterval {
+    private func getTime(from position: Tick) -> TimeInterval {
         var result: TimeInterval = 0
         for (current, next) in zip(tempoChanges, tempoChanges.dropFirst()) {
             if next.position <= position {
                 switch current.ramp {
                 case .jump:
-                    result += time(
-                        from: next.position - current.position,
-                        with: current.tempo)
+                    result += (next.position - current.position).seconds(with: current.tempo)
                 case .linear:
                     fatalError("Linear curves not implemented")
                 case .bezier:
@@ -83,9 +83,7 @@ final class TempoTrack: ObservableObject {
             } else if current.position <= position {
                 switch current.ramp {
                 case .jump:
-                    result += time(
-                        from: position - current.position,
-                        with: current.tempo)
+                    result += (position - current.position).seconds(with: current.tempo)
                 case .linear:
                     fatalError("Linear curves not implemented")
                 case .bezier:
@@ -99,27 +97,18 @@ final class TempoTrack: ObservableObject {
 }
 
 struct TempoChange: EventItem {
-    var position: Ticks
-    var tempo: SecondsPerWholeNote
+    var position: Tick
+    var tempo: Tempo
     var ramp: Curve = .linear
 
-    init(position: Ticks, bpm: Double) {
-        self.position = position
-        self.tempo = 4 * 60 / bpm
-    }
-
-    init(position: Ticks, tempo: SecondsPerWholeNote) {
+    init(position: Tick, tempo: Tempo) {
         self.position = position
         self.tempo = tempo
-    }
-
-    var bpm: Double {
-        return 4 * 60 / tempo
     }
 }
 
 struct TimeSignatureChange: EventItem {
-    var position: Ticks
+    var position: Tick
     var numerator: UInt16
     var denominator: UInt16
 }

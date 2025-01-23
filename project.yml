@@ -1,4 +1,4 @@
-id: 4514926E-D654-4333-8C28-4E627668644B
+id: 4514926ED654-4333-8C28-4E627668644B
 metadata:
   name: masterpiece
   author: zaher
@@ -40,7 +40,7 @@ trackList:
       source:
         midi:
           midiData: kEB/
-  - id: 5A1195A0-A014-4A1A-A833-A632CEBC744D
+  - id: F6960614-0595-48BE-BFD1-B13EF315C9E0
     number: 2
     name: track 2
     depth: 0

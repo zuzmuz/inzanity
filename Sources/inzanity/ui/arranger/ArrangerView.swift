@@ -60,7 +60,7 @@ struct TrackView: View {
         HStack(spacing: 0) {
             ForEach(track.regions, id: \.position) { region in
                 Text(String(repeating: region.empty ? " " : "▄",
-                            count: Int((region.duration * Double(zoom)).rounded())))
+                            count: Int((region.duration.wholeNotes * Double(zoom)).rounded())))
             }
         }
     }

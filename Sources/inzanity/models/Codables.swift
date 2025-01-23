@@ -98,8 +98,8 @@ extension TempoChange: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Ticks.self, forKey: .position),
-            tempo: try container.decode(Double.self, forKey: .tempo)
+            position: try container.decode(Tick.self, forKey: .position),
+            tempo: try container.decode(Tempo.self, forKey: .tempo)
         )
     }
 
@@ -118,7 +118,7 @@ extension TimeSignatureChange: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Ticks.self, forKey: .position),
+            position: try container.decode(Tick.self, forKey: .position),
             numerator: try container.decode(UInt16.self, forKey: .numerator),
             denominator: try container.decode(UInt16.self, forKey: .denominator)
         )
@@ -196,8 +196,8 @@ extension Track.Item: Codable {
     convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            position: try container.decode(Ticks.self, forKey: .position),
-            duration: try container.decode(Ticks.self, forKey: .duration),
+            position: try container.decode(Tick.self, forKey: .position),
+            duration: try container.decode(Tick.self, forKey: .duration),
             source: try container.decode(Source.self, forKey: .source)
         )
     }
