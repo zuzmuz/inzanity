@@ -39,8 +39,10 @@ pub fn render(frame: &mut Frame, state: &AppState, theme: &Theme) {
         ArrangementView {
             project: state.project.as_deref(),
             cursor_track: state.cursor_track,
+            scroll_track: state.scroll_track,
             scroll_tick: state.scroll_tick,
             ticks_per_col: state.ticks_per_col,
+            track_height: state.track_height,
         },
         areas[1],
     );

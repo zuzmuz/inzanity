@@ -22,64 +22,87 @@ impl KeyBinding {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
-    // Navigation
+    // Cursor movement
     MoveUp,
     MoveDown,
     MoveLeft,
     MoveRight,
 
+    // Scrolling (independent of cursor)
+    ScrollUp,
+    ScrollDown,
+    ScrollLeft,
+    ScrollRight,
+
+    // Zoom
+    ZoomInH,
+    ZoomOutH,
+    ZoomInV,
+    ZoomOutV,
+
     // Mode transitions
     EnterCommand,
     EnterInsert,
     EnterVisual,
-    ExitMode, // back to Normal
+    ExitMode,
 
     // Transport
     TogglePlay,
 
     // App
     Quit,
-    Confirm, // Enter
+    Confirm,
 }
 
 pub struct KeyMap(HashMap<(Mode, KeyBinding), Action>);
 
 impl KeyMap {
     pub fn default_bindings() -> Self {
-        let mut map = HashMap::new();
+        let mut map: HashMap<(Mode, KeyBinding), Action> = HashMap::new();
 
-        let mut bind = |mode, code, action: Action| {
-            map.insert((mode, KeyBinding::new(code)), action);
-        };
+        // Normal mode — cursor
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
 
-        // Normal mode
-        bind(Mode::Normal, KeyCode::Char('j'), Action::MoveDown);
-        bind(Mode::Normal, KeyCode::Char('k'), Action::MoveUp);
-        bind(Mode::Normal, KeyCode::Char('h'), Action::MoveLeft);
-        bind(Mode::Normal, KeyCode::Char('l'), Action::MoveRight);
-        bind(Mode::Normal, KeyCode::Char(':'), Action::EnterCommand);
-        bind(Mode::Normal, KeyCode::Char('i'), Action::EnterInsert);
-        bind(Mode::Normal, KeyCode::Char('v'), Action::EnterVisual);
-        bind(Mode::Normal, KeyCode::Char(' '), Action::TogglePlay);
-        bind(Mode::Normal, KeyCode::Char('q'), Action::Quit);
+        // Normal mode — scroll viewport (Ctrl+d/u/f/b, vim-style)
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('d'))), Action::ScrollDown);
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('u'))), Action::ScrollUp);
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('f'))), Action::ScrollRight);
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('b'))), Action::ScrollLeft);
+
+        // Normal mode — horizontal zoom (= zoom in, - zoom out)
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('='))), Action::ZoomInH);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('-'))), Action::ZoomOutH);
+
+        // Normal mode — vertical zoom (Ctrl+= / Ctrl+-)
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('='))), Action::ZoomInV);
+        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('-'))), Action::ZoomOutV);
+
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('v'))), Action::EnterVisual);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(' '))), Action::TogglePlay);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('q'))), Action::Quit);
 
         // Insert mode
-        bind(Mode::Insert, KeyCode::Esc, Action::ExitMode);
-        bind(Mode::Insert, KeyCode::Char('j'), Action::MoveDown);
-        bind(Mode::Insert, KeyCode::Char('k'), Action::MoveUp);
-        bind(Mode::Insert, KeyCode::Char('h'), Action::MoveLeft);
-        bind(Mode::Insert, KeyCode::Char('l'), Action::MoveRight);
+        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
+        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
+        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
+        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
+        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
 
         // Visual mode
-        bind(Mode::Visual, KeyCode::Esc, Action::ExitMode);
-        bind(Mode::Visual, KeyCode::Char('j'), Action::MoveDown);
-        bind(Mode::Visual, KeyCode::Char('k'), Action::MoveUp);
-        bind(Mode::Visual, KeyCode::Char('h'), Action::MoveLeft);
-        bind(Mode::Visual, KeyCode::Char('l'), Action::MoveRight);
+        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
+        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
+        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
+        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
+        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
 
         // Command mode
-        bind(Mode::Command, KeyCode::Esc, Action::ExitMode);
-        bind(Mode::Command, KeyCode::Enter, Action::Confirm);
+        map.insert((Mode::Command, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
+        map.insert((Mode::Command, KeyBinding::new(KeyCode::Enter)), Action::Confirm);
 
         // Ctrl-C quits from any mode
         for mode in [Mode::Normal, Mode::Insert, Mode::Visual, Mode::Command] {

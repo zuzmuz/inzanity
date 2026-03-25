@@ -7,13 +7,20 @@ use crate::domain::{project::Project, ticks::TICKS_PER_BEAT};
 use crate::state::mode::Mode;
 use crate::ui::theme::Theme;
 
+const MIN_TICKS_PER_COL: u64 = TICKS_PER_BEAT / 16; // 64th note
+const MAX_TICKS_PER_COL: u64 = TICKS_PER_BEAT * 16; // 16 beats
+const MIN_TRACK_HEIGHT: u16 = 1;
+const MAX_TRACK_HEIGHT: u16 = 8;
+
 pub struct AppState {
     pub mode: Mode,
     pub playing: bool,
     pub project: Option<Box<Project>>,
     pub cursor_track: usize,
     pub scroll_tick: u64,
+    pub scroll_track: usize,
     pub ticks_per_col: u64,
+    pub track_height: u16,
     pub command_input: String,
     pub status_message: Option<String>,
 }
@@ -26,7 +33,9 @@ impl Default for AppState {
             project: None,
             cursor_track: 0,
             scroll_tick: 0,
+            scroll_track: 0,
             ticks_per_col: TICKS_PER_BEAT / 4, // sixteenth note per column
+            track_height: 1,
             command_input: String::new(),
             status_message: None,
         }
@@ -105,8 +114,13 @@ impl App {
                 }
             }
 
+            // Cursor moves selection
             Action::MoveUp => {
                 state.cursor_track = state.cursor_track.saturating_sub(1);
+                // Keep cursor in view
+                if state.cursor_track < state.scroll_track {
+                    state.scroll_track = state.cursor_track;
+                }
             }
             Action::MoveDown => {
                 if track_count > 0 {
@@ -118,6 +132,38 @@ impl App {
             }
             Action::MoveRight => {
                 state.scroll_tick += state.ticks_per_col * 4;
+            }
+
+            // Scroll moves the viewport without changing the cursor
+            Action::ScrollUp => {
+                state.scroll_track = state.scroll_track.saturating_sub(1);
+            }
+            Action::ScrollDown => {
+                if track_count > 0 {
+                    state.scroll_track = (state.scroll_track + 1).min(track_count.saturating_sub(1));
+                }
+            }
+            Action::ScrollLeft => {
+                state.scroll_tick = state.scroll_tick.saturating_sub(state.ticks_per_col * 16);
+            }
+            Action::ScrollRight => {
+                state.scroll_tick += state.ticks_per_col * 16;
+            }
+
+            // Horizontal zoom: halve/double ticks_per_col, clamped
+            Action::ZoomInH => {
+                state.ticks_per_col = (state.ticks_per_col / 2).max(MIN_TICKS_PER_COL);
+            }
+            Action::ZoomOutH => {
+                state.ticks_per_col = (state.ticks_per_col * 2).min(MAX_TICKS_PER_COL);
+            }
+
+            // Vertical zoom: grow/shrink track row height, clamped
+            Action::ZoomInV => {
+                state.track_height = (state.track_height + 1).min(MAX_TRACK_HEIGHT);
+            }
+            Action::ZoomOutV => {
+                state.track_height = (state.track_height - 1).max(MIN_TRACK_HEIGHT);
             }
 
             Action::TogglePlay => {

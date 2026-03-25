@@ -14,10 +14,14 @@ pub struct ArrangementView<'a> {
     pub project: Option<&'a Project>,
     /// Index of the currently selected track.
     pub cursor_track: usize,
-    /// Leftmost visible tick.
+    /// First visible track index (vertical scroll).
+    pub scroll_track: usize,
+    /// Leftmost visible tick (horizontal scroll).
     pub scroll_tick: u64,
-    /// Ticks represented by one terminal column.
+    /// Ticks represented by one terminal column (horizontal zoom).
     pub ticks_per_col: u64,
+    /// Rows per track (vertical zoom).
+    pub track_height: u16,
 }
 
 impl Widget for ArrangementView<'_> {
@@ -47,9 +51,10 @@ impl Widget for ArrangementView<'_> {
         let tracks_timeline_area = Rect { y: timeline_area.y + 1, height: timeline_area.height.saturating_sub(1), ..timeline_area };
 
         let tracks = self.project.map(|p| p.tracks.as_slice()).unwrap_or(&[]);
+        let th = self.track_height;
 
-        for (i, track) in tracks.iter().enumerate() {
-            let y_offset = i as u16;
+        for (slot, (i, track)) in tracks.iter().enumerate().skip(self.scroll_track).enumerate() {
+            let y_offset = slot as u16 * th;
             if y_offset >= tracks_name_area.height {
                 break;
             }
@@ -61,8 +66,12 @@ impl Widget for ArrangementView<'_> {
                 Style::default()
             };
 
-            // Track name cell
-            let name_row = Rect { y: tracks_name_area.y + y_offset, height: 1, ..tracks_name_area };
+            // Track name cell (first row of the track's block)
+            let name_row = Rect {
+                y: tracks_name_area.y + y_offset,
+                height: th,
+                ..tracks_name_area
+            };
             let indent = "  ".repeat(track.depth as usize);
             let mute_indicator = if track.mute { "M" } else { " " };
             let solo_indicator = if track.solo { "S" } else { " " };
@@ -72,10 +81,26 @@ impl Widget for ArrangementView<'_> {
                 name = track.name,
             );
             let truncated = truncate_str(&label, TRACK_NAME_WIDTH as usize);
-            buf.set_string(name_row.x, name_row.y, format!("{truncated:<width$}", width = TRACK_NAME_WIDTH as usize), row_style);
+            // Fill all rows of the name cell
+            for row in 0..th {
+                let row_y = name_row.y + row;
+                if row_y >= tracks_name_area.y + tracks_name_area.height {
+                    break;
+                }
+                let content = if row == 0 {
+                    format!("{truncated:<width$}", width = TRACK_NAME_WIDTH as usize)
+                } else {
+                    " ".repeat(TRACK_NAME_WIDTH as usize)
+                };
+                buf.set_string(name_row.x, row_y, content, row_style);
+            }
 
-            // Timeline row
-            let timeline_row = Rect { y: tracks_timeline_area.y + y_offset, height: 1, ..tracks_timeline_area };
+            // Timeline rows
+            let timeline_row = Rect {
+                y: tracks_timeline_area.y + y_offset,
+                height: th,
+                ..tracks_timeline_area
+            };
             self.render_track_items(track, timeline_row, is_selected, i, buf);
         }
     }
@@ -115,8 +140,10 @@ impl ArrangementView<'_> {
 
         let bg = if selected { Color::Rgb(40, 40, 60) } else { Color::Reset };
 
-        // Fill row with background
-        buf.set_string(area.x, area.y, " ".repeat(area.width as usize), Style::default().bg(bg));
+        // Fill all rows of this track's block with background
+        for row in 0..area.height {
+            buf.set_string(area.x, area.y + row, " ".repeat(area.width as usize), Style::default().bg(bg));
+        }
 
         let color_index = track_index % 8;
         let default_theme = crate::ui::theme::Theme::default();
@@ -152,7 +179,11 @@ impl ArrangementView<'_> {
             let item_style = Style::default().fg(Color::Black).bg(item_color);
             let content = truncate_str(label, width as usize);
             let padded = format!("{content:<width$}", width = width as usize);
-            buf.set_string(area.x + start_col, area.y, padded, item_style);
+            // Draw item across all rows of this track's height
+            for row in 0..area.height {
+                let row_content = if row == 0 { padded.clone() } else { " ".repeat(width as usize) };
+                buf.set_string(area.x + start_col, area.y + row, row_content, item_style);
+            }
         }
     }
 }
