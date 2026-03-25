@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyEvent};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -7,24 +7,42 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 
+use crate::config::keybindings::{Action, KeyMap};
+use crate::state::mode::Mode;
+
 pub struct App {
     pub should_quit: bool,
+    pub mode: Mode,
+    keymap: KeyMap,
 }
 
 impl App {
     pub fn new() -> Self {
-        Self { should_quit: false }
+        Self {
+            should_quit: false,
+            mode: Mode::default(),
+            keymap: KeyMap::default_bindings(),
+        }
     }
 
     pub fn handle_event(&mut self, event: Event) -> Result<()> {
         if let Event::Key(KeyEvent { code, modifiers, .. }) = event {
-            match (code, modifiers) {
-                (KeyCode::Char('c'), KeyModifiers::CONTROL) => self.should_quit = true,
-                (KeyCode::Char('q'), _) => self.should_quit = true,
-                _ => {}
+            if let Some(action) = self.keymap.get(self.mode, code, modifiers) {
+                self.handle_action(action);
             }
         }
         Ok(())
+    }
+
+    fn handle_action(&mut self, action: Action) {
+        match action {
+            Action::Quit => self.should_quit = true,
+            Action::EnterCommand => self.mode = Mode::Command,
+            Action::EnterInsert => self.mode = Mode::Insert,
+            Action::EnterVisual => self.mode = Mode::Visual,
+            Action::ExitMode => self.mode = Mode::Normal,
+            _ => {}
+        }
     }
 
     pub fn render(&self, frame: &mut Frame) {
@@ -43,7 +61,7 @@ impl App {
         );
 
         frame.render_widget(
-            Paragraph::new("  q  quit")
+            Paragraph::new(format!("  {}  |  q quit  |  : command", self.mode))
                 .style(Style::default().fg(Color::DarkGray)),
             areas[1],
         );
