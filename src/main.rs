@@ -2,6 +2,7 @@ mod app;
 mod config;
 mod domain;
 mod state;
+mod ui;
 
 use std::time::Duration;
 
