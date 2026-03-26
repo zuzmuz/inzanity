@@ -53,6 +53,10 @@ pub enum Action {
     // Transport
     TogglePlay,
 
+    // Project / track editing
+    AddTrack,
+    DeleteTrack,
+
     // App
     Quit,
     Confirm,
@@ -84,6 +88,10 @@ impl KeyMap {
         // Shift+= sends '+', Shift+- sends '_' — bind the resulting chars directly
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('+'))), Action::ZoomInV);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('_'))), Action::ZoomOutV);
+
+        // Normal mode — track editing
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('a'))), Action::AddTrack);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('D'))), Action::DeleteTrack);
 
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);

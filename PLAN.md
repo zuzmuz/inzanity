@@ -183,15 +183,15 @@ Transport position is exposed as `Arc<AtomicU64>` (current tick). The UI thread 
 ### Phase 1 — TUI Skeleton
 **Goal:** Working ratatui app with modal state machine and basic layout. No audio or MIDI.
 
-- [ ] Add `ratatui`, `crossterm`, `anyhow`, `serde`, `serde_yaml`, `uuid` to `Cargo.toml`
-- [ ] Implement `domain/` structs (`Project`, `Track`, `Item`, `Tick`, `Tempo`) with serde
-- [ ] Implement `state/mode.rs` — four modes, transition table, `ModeController`
-- [ ] Implement `config/keybindings.rs` with hardcoded defaults
-- [ ] Build `app.rs` run loop: terminal init, event poll, draw, clean shutdown
-- [ ] Implement `ui/arrangement.rs` — static read-only view of loaded project
-- [ ] Implement `ui/transport.rs` — static bar showing BPM and time position
-- [ ] Implement `ui/command_bar.rs` — mode indicator, `:` command entry, `:q` to quit
-- [ ] Wire `hjkl` navigation in Normal mode
+- [x] Add `ratatui`, `crossterm`, `anyhow`, `serde`, `serde_yaml`, `uuid` to `Cargo.toml`
+- [x] Implement `domain/` structs (`Project`, `Track`, `Item`, `Tick`, `Tempo`) with serde
+- [x] Implement `state/mode.rs` — four modes, transition table, `ModeController`
+- [x] Implement `config/keybindings.rs` with hardcoded defaults
+- [x] Build `app.rs` run loop: terminal init, event poll, draw, clean shutdown
+- [x] Implement `ui/arrangement.rs` — static read-only view of loaded project
+- [x] Implement `ui/transport.rs` — static bar showing BPM and time position
+- [x] Implement `ui/command_bar.rs` — mode indicator, `:` command entry, `:q` to quit
+- [x] Wire `hjkl` navigation in Normal mode
 
 **Deliverable:** Load a project file, display the arrangement, navigate with `hjkl`, quit with `:q`.
 
@@ -200,7 +200,7 @@ Transport position is exposed as `Arc<AtomicU64>` (current tick). The UI thread 
 ### Phase 2 — Project Editing and Persistence
 **Goal:** Full CRUD on the project from the TUI; reliable save/load.
 
-- [ ] Implement `commands/` with `Command` enum and parser
+- [x] Implement `commands/` with `Command` enum and parser
 - [ ] Implement `persistence/undo.rs` — command-pattern undo/redo stack
 - [ ] Track operations: add, delete, rename, reorder, mute/solo/arm
 - [ ] Item operations: move, resize, copy/paste, delete (Visual mode selection)

@@ -3,7 +3,7 @@ use crossterm::event::{Event, KeyEvent};
 use ratatui::Frame;
 
 use crate::config::keybindings::{Action, KeyMap};
-use crate::domain::{project::Project, ticks::TICKS_PER_BEAT};
+use crate::domain::{project::Project, ticks::TICKS_PER_BEAT, track::Track};
 use crate::persistence::project_io;
 use crate::state::mode::Mode;
 use crate::ui::theme::Theme;
@@ -204,6 +204,32 @@ impl App {
             Action::TogglePlay => {
                 state.playing = !state.playing;
             }
+
+            Action::AddTrack => {
+                let project = state.project.get_or_insert_with(|| Box::new(Project::default()));
+                let number = project.tracks.len() as u32 + 1;
+                let track = Track::new(format!("Track {number}"), number);
+                let insert_at = if project.tracks.is_empty() {
+                    0
+                } else {
+                    state.cursor_track + 1
+                };
+                project.tracks.insert(insert_at, track);
+                state.cursor_track = insert_at;
+            }
+
+            Action::DeleteTrack => {
+                if let Some(project) = &mut state.project {
+                    if !project.tracks.is_empty() {
+                        project.tracks.remove(state.cursor_track);
+                        if !project.tracks.is_empty() {
+                            state.cursor_track = state.cursor_track.min(project.tracks.len() - 1);
+                        } else {
+                            state.cursor_track = 0;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -211,6 +237,15 @@ impl App {
         let mut parts = cmd.splitn(2, ' ');
         match parts.next().unwrap_or("") {
             "q" | "quit" => self.should_quit = true,
+            "new" => {
+                let name = parts.next().unwrap_or("Untitled");
+                self.state.project = Some(Box::new(Project::new(name)));
+                self.state.cursor_track = 0;
+                self.state.scroll_track = 0;
+                self.state.scroll_tick = 0;
+                self.project_path = None;
+                self.state.status_message = Some(format!("created project \"{name}\""));
+            }
             "w" => {
                 let path = parts.next()
                     .map(std::path::PathBuf::from)
