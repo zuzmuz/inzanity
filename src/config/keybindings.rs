@@ -80,9 +80,10 @@ impl KeyMap {
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('='))), Action::ZoomInH);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('-'))), Action::ZoomOutH);
 
-        // Normal mode — vertical zoom (Shift+= / Shift+-)
-        map.insert((Mode::Normal, KeyBinding::shift(KeyCode::Char('='))), Action::ZoomInV);
-        map.insert((Mode::Normal, KeyBinding::shift(KeyCode::Char('-'))), Action::ZoomOutV);
+        // Normal mode — vertical zoom (+ / _)
+        // Shift+= sends '+', Shift+- sends '_' — bind the resulting chars directly
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('+'))), Action::ZoomInV);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('_'))), Action::ZoomOutV);
 
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);
