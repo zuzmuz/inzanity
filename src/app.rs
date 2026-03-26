@@ -4,6 +4,7 @@ use ratatui::Frame;
 
 use crate::config::keybindings::{Action, KeyMap};
 use crate::domain::{project::Project, ticks::TICKS_PER_BEAT};
+use crate::persistence::project_io;
 use crate::state::mode::Mode;
 use crate::ui::theme::Theme;
 
@@ -45,6 +46,8 @@ impl Default for AppState {
 pub struct App {
     pub state: AppState,
     pub should_quit: bool,
+    /// Path of the currently open project file, if any.
+    pub project_path: Option<std::path::PathBuf>,
     keymap: KeyMap,
     theme: Theme,
 }
@@ -54,8 +57,40 @@ impl App {
         Self {
             state: AppState::default(),
             should_quit: false,
+            project_path: None,
             keymap: KeyMap::default_bindings(),
             theme: Theme::default(),
+        }
+    }
+
+    pub fn load_project(&mut self, path: &std::path::Path) {
+        match project_io::load(path) {
+            Ok(project) => {
+                self.project_path = Some(path.to_path_buf());
+                self.state.project = Some(Box::new(project));
+                self.state.cursor_track = 0;
+                self.state.scroll_track = 0;
+                self.state.scroll_tick = 0;
+                self.state.status_message = Some(format!("loaded {}", path.display()));
+            }
+            Err(e) => {
+                self.state.status_message = Some(format!("error: {e}"));
+            }
+        }
+    }
+
+    pub fn save_project(&mut self, path: &std::path::Path) {
+        match &self.state.project {
+            None => self.state.status_message = Some("no project open".into()),
+            Some(project) => match project_io::save(project, path) {
+                Ok(()) => {
+                    self.project_path = Some(path.to_path_buf());
+                    self.state.status_message = Some(format!("saved {}", path.display()));
+                }
+                Err(e) => {
+                    self.state.status_message = Some(format!("error: {e}"));
+                }
+            },
         }
     }
 
@@ -173,10 +208,23 @@ impl App {
     }
 
     fn execute_command(&mut self, cmd: &str) {
-        match cmd {
+        let mut parts = cmd.splitn(2, ' ');
+        match parts.next().unwrap_or("") {
             "q" | "quit" => self.should_quit = true,
             "w" => {
-                self.state.status_message = Some("save not yet implemented".into());
+                let path = parts.next()
+                    .map(std::path::PathBuf::from)
+                    .or_else(|| self.project_path.clone());
+                match path {
+                    Some(p) => self.save_project(&p),
+                    None => self.state.status_message = Some("usage: w <path>".into()),
+                }
+            }
+            "e" | "edit" => {
+                match parts.next() {
+                    Some(path) => self.load_project(std::path::Path::new(path)),
+                    None => self.state.status_message = Some("usage: e <path>".into()),
+                }
             }
             _ => {
                 self.state.status_message = Some(format!("unknown command: {cmd}"));

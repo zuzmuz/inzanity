@@ -1,6 +1,7 @@
 mod app;
 mod config;
 mod domain;
+mod persistence;
 mod state;
 mod ui;
 
@@ -25,6 +26,11 @@ fn main() -> Result<()> {
 
 fn run(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
     let mut app = App::new();
+
+    // Load project from first CLI argument if provided
+    if let Some(path) = std::env::args().nth(1) {
+        app.load_project(std::path::Path::new(&path));
+    }
 
     loop {
         terminal.draw(|f| app.render(f))?;
