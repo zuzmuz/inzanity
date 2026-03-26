@@ -7,10 +7,10 @@ use crate::domain::{project::Project, ticks::TICKS_PER_BEAT};
 use crate::state::mode::Mode;
 use crate::ui::theme::Theme;
 
-const MIN_TICKS_PER_COL: u64 = TICKS_PER_BEAT / 16; // 64th note
+const MIN_TICKS_PER_COL: u64 = TICKS_PER_BEAT / 256; // 64th note
 const MAX_TICKS_PER_COL: u64 = TICKS_PER_BEAT * 16; // 16 beats
 const MIN_TRACK_HEIGHT: u16 = 1;
-const MAX_TRACK_HEIGHT: u16 = 8;
+const MAX_TRACK_HEIGHT: u16 = 16;
 
 pub struct AppState {
     pub mode: Mode,

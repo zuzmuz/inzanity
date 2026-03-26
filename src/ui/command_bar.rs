@@ -24,7 +24,7 @@ impl Widget for CommandBar<'_> {
             Line::from(vec![
                 Span::styled(
                     format!(" {:^9} ", self.mode),
-                    Style::default().fg(ratatui::style::Color::Black).bg(mode_color).add_modifier(Modifier::BOLD),
+                    Style::default().fg(mode_color).add_modifier(Modifier::BOLD),
                 ),
                 Span::raw(" :"),
                 Span::raw(self.command_input),
@@ -38,7 +38,7 @@ impl Widget for CommandBar<'_> {
             Line::from(vec![
                 Span::styled(
                     format!(" {:^9} ", self.mode),
-                    Style::default().fg(ratatui::style::Color::Black).bg(mode_color).add_modifier(Modifier::BOLD),
+                    Style::default().fg(mode_color).add_modifier(Modifier::BOLD),
                 ),
                 right,
             ])
