@@ -56,6 +56,7 @@ pub enum Action {
     // Project / track editing
     AddTrack,
     DeleteTrack,
+    RenameTrack,
 
     // App
     Quit,
@@ -91,7 +92,8 @@ impl KeyMap {
 
         // Normal mode — track editing
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('a'))), Action::AddTrack);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('D'))), Action::DeleteTrack);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('r'))), Action::RenameTrack);
+        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('d'))), Action::DeleteTrack);
 
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);

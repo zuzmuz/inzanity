@@ -218,6 +218,13 @@ impl App {
                 state.playing = !state.playing;
             }
 
+            Action::RenameTrack => {
+                if state.project.is_some() {
+                    state.mode = Mode::Command;
+                    state.command_input = "rename ".to_string();
+                }
+            }
+
             Action::AddTrack => {
                 let project = state.project.get_or_insert_with(|| Box::new(Project::default()));
                 let number = project.tracks.len() as u32 + 1;
@@ -266,6 +273,19 @@ impl App {
                 match path {
                     Some(p) => self.save_project(&p),
                     None => self.state.status_message = Some("usage: w <path>".into()),
+                }
+            }
+            "rename" => {
+                match parts.next() {
+                    Some(name) if !name.is_empty() => {
+                        if let Some(project) = &mut self.state.project {
+                            if let Some(track) = project.tracks.get_mut(self.state.cursor_track) {
+                                track.name = name.to_string();
+                                self.state.status_message = Some(format!("renamed to \"{name}\""));
+                            }
+                        }
+                    }
+                    _ => self.state.status_message = Some("usage: rename <name>".into()),
                 }
             }
             "e" | "edit" => {
