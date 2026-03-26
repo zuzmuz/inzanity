@@ -12,7 +12,6 @@ pub struct Item {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
 pub enum ItemSource {
     Midi {
         /// Raw MIDI event bytes.

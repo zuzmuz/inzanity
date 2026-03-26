@@ -18,6 +18,10 @@ impl KeyBinding {
     pub fn ctrl(code: KeyCode) -> Self {
         Self { code, modifiers: KeyModifiers::CONTROL }
     }
+
+    pub fn shift(code: KeyCode) -> Self {
+        Self { code, modifiers: KeyModifiers::SHIFT }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,9 +80,9 @@ impl KeyMap {
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('='))), Action::ZoomInH);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('-'))), Action::ZoomOutH);
 
-        // Normal mode — vertical zoom (Ctrl+= / Ctrl+-)
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('='))), Action::ZoomInV);
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('-'))), Action::ZoomOutV);
+        // Normal mode — vertical zoom (Shift+= / Shift+-)
+        map.insert((Mode::Normal, KeyBinding::shift(KeyCode::Char('='))), Action::ZoomInV);
+        map.insert((Mode::Normal, KeyBinding::shift(KeyCode::Char('-'))), Action::ZoomOutV);
 
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
         map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);
