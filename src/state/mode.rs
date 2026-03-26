@@ -3,7 +3,6 @@ pub enum Mode {
     #[default]
     Normal,
     Insert,
-    Visual,
     Command,
 }
 
@@ -12,7 +11,6 @@ impl std::fmt::Display for Mode {
         match self {
             Mode::Normal => write!(f, "NORMAL"),
             Mode::Insert => write!(f, "INSERT"),
-            Mode::Visual => write!(f, "VISUAL"),
             Mode::Command => write!(f, "COMMAND"),
         }
     }

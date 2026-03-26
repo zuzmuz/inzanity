@@ -6,15 +6,17 @@ use crate::config::keybindings::{Action, KeyMap};
 use crate::domain::{project::Project, ticks::TICKS_PER_BEAT, track::Track};
 use crate::persistence::project_io;
 use crate::state::mode::Mode;
+use crate::state::panel::Panel;
 use crate::ui::theme::Theme;
 
-const MIN_TICKS_PER_COL: u64 = TICKS_PER_BEAT / 256; // 64th note
-const MAX_TICKS_PER_COL: u64 = TICKS_PER_BEAT * 16; // 16 beats
+const MIN_TICKS_PER_COL: u64 = TICKS_PER_BEAT / 256;
+const MAX_TICKS_PER_COL: u64 = TICKS_PER_BEAT * 16;
 const MIN_TRACK_HEIGHT: u16 = 1;
 const MAX_TRACK_HEIGHT: u16 = 16;
 
 pub struct AppState {
     pub mode: Mode,
+    pub panel: Panel,
     pub playing: bool,
     pub project: Option<Box<Project>>,
     pub cursor_track: usize,
@@ -24,7 +26,6 @@ pub struct AppState {
     pub track_height: u16,
     pub command_input: String,
     pub status_message: Option<String>,
-    /// Updated each frame by the renderer; used to keep cursor in view.
     pub viewport_track_rows: u16,
 }
 
@@ -38,6 +39,7 @@ impl Default for AppState {
     fn default() -> Self {
         Self {
             mode: Mode::default(),
+            panel: Panel::default(),
             playing: false,
             project: None,
             cursor_track: 0,
@@ -47,7 +49,7 @@ impl Default for AppState {
             track_height: 1,
             command_input: String::new(),
             status_message: None,
-            viewport_track_rows: 20, // sensible default until first frame
+            viewport_track_rows: 20,
         }
     }
 }
@@ -55,7 +57,6 @@ impl Default for AppState {
 pub struct App {
     pub state: AppState,
     pub should_quit: bool,
-    /// Path of the currently open project file, if any.
     pub project_path: Option<std::path::PathBuf>,
     keymap: KeyMap,
     theme: Theme,
@@ -104,29 +105,26 @@ impl App {
     }
 
     pub fn handle_event(&mut self, event: Event) -> Result<()> {
-        match &event {
-            Event::Key(KeyEvent { code, modifiers, .. }) => {
-                // Command mode: capture raw chars for the input buffer
-                if self.state.mode == Mode::Command {
-                    use crossterm::event::KeyCode;
-                    match code {
-                        KeyCode::Char(c) => {
-                            self.state.command_input.push(*c);
-                            return Ok(());
-                        }
-                        KeyCode::Backspace => {
-                            self.state.command_input.pop();
-                            return Ok(());
-                        }
-                        _ => {}
+        if let Event::Key(KeyEvent { code, modifiers, .. }) = event {
+            // Command mode: capture raw chars into the input buffer
+            if self.state.mode == Mode::Command {
+                use crossterm::event::KeyCode;
+                match code {
+                    KeyCode::Char(c) => {
+                        self.state.command_input.push(c);
+                        return Ok(());
                     }
-                }
-
-                if let Some(action) = self.keymap.get(self.state.mode, *code, *modifiers) {
-                    self.handle_action(action);
+                    KeyCode::Backspace => {
+                        self.state.command_input.pop();
+                        return Ok(());
+                    }
+                    _ => {}
                 }
             }
-            _ => {}
+
+            if let Some(action) = self.keymap.get(self.state.panel, self.state.mode, code, modifiers) {
+                self.handle_action(action);
+            }
         }
         Ok(())
     }
@@ -138,12 +136,18 @@ impl App {
         match action {
             Action::Quit => self.should_quit = true,
 
+            Action::SwitchPanel => {
+                state.panel = match state.panel {
+                    Panel::TrackList => Panel::Arrange,
+                    Panel::Arrange => Panel::TrackList,
+                };
+            }
+
             Action::EnterCommand => {
                 state.mode = Mode::Command;
                 state.command_input.clear();
             }
             Action::EnterInsert => state.mode = Mode::Insert,
-            Action::EnterVisual => state.mode = Mode::Visual,
             Action::ExitMode => {
                 state.mode = Mode::Normal;
                 state.command_input.clear();
@@ -158,10 +162,8 @@ impl App {
                 }
             }
 
-            // Cursor moves selection
             Action::MoveUp => {
                 state.cursor_track = state.cursor_track.saturating_sub(1);
-                // Keep cursor in view
                 if state.cursor_track < state.scroll_track {
                     state.scroll_track = state.cursor_track;
                 }
@@ -169,20 +171,19 @@ impl App {
             Action::MoveDown => {
                 if track_count > 0 {
                     state.cursor_track = (state.cursor_track + 1).min(track_count - 1);
-                    // Scroll viewport to follow cursor downward
                     if state.cursor_track >= state.scroll_track + state.visible_tracks() {
                         state.scroll_track = state.cursor_track + 1 - state.visible_tracks();
                     }
                 }
             }
-            Action::MoveLeft => {
+
+            Action::ScrollTimelineLeft => {
                 state.scroll_tick = state.scroll_tick.saturating_sub(state.ticks_per_col * 4);
             }
-            Action::MoveRight => {
+            Action::ScrollTimelineRight => {
                 state.scroll_tick += state.ticks_per_col * 4;
             }
 
-            // Scroll moves the viewport without changing the cursor
             Action::ScrollUp => {
                 state.scroll_track = state.scroll_track.saturating_sub(1);
             }
@@ -198,15 +199,12 @@ impl App {
                 state.scroll_tick += state.ticks_per_col * 16;
             }
 
-            // Horizontal zoom: halve/double ticks_per_col, clamped
             Action::ZoomInH => {
                 state.ticks_per_col = (state.ticks_per_col / 2).max(MIN_TICKS_PER_COL);
             }
             Action::ZoomOutH => {
                 state.ticks_per_col = (state.ticks_per_col * 2).min(MAX_TICKS_PER_COL);
             }
-
-            // Vertical zoom: grow/shrink track row height, clamped
             Action::ZoomInV => {
                 state.track_height = (state.track_height + 1).min(MAX_TRACK_HEIGHT);
             }
@@ -218,13 +216,7 @@ impl App {
                 state.playing = !state.playing;
             }
 
-            Action::RenameTrack => {
-                if state.project.is_some() {
-                    state.mode = Mode::Command;
-                    state.command_input = "rename ".to_string();
-                }
-            }
-
+            // ── Track list actions ────────────────────────────────────
             Action::AddTrack => {
                 let project = state.project.get_or_insert_with(|| Box::new(Project::default()));
                 let number = project.tracks.len() as u32 + 1;
@@ -232,7 +224,7 @@ impl App {
                 let insert_at = if project.tracks.is_empty() {
                     0
                 } else {
-                    state.cursor_track + 1
+                    (state.cursor_track + 1).min(project.tracks.len())
                 };
                 project.tracks.insert(insert_at, track);
                 state.cursor_track = insert_at;
@@ -242,13 +234,49 @@ impl App {
                 if let Some(project) = &mut state.project {
                     if !project.tracks.is_empty() {
                         project.tracks.remove(state.cursor_track);
-                        if !project.tracks.is_empty() {
-                            state.cursor_track = state.cursor_track.min(project.tracks.len() - 1);
+                        state.cursor_track = if project.tracks.is_empty() {
+                            0
                         } else {
-                            state.cursor_track = 0;
-                        }
+                            state.cursor_track.min(project.tracks.len() - 1)
+                        };
                     }
                 }
+            }
+
+            Action::RenameTrack => {
+                if state.project.is_some() {
+                    state.mode = Mode::Command;
+                    state.command_input = "rename ".to_string();
+                }
+            }
+
+            Action::MuteTrack => {
+                if let Some(project) = &mut state.project {
+                    if let Some(track) = project.tracks.get_mut(state.cursor_track) {
+                        track.mute = !track.mute;
+                    }
+                }
+            }
+
+            Action::SoloTrack => {
+                if let Some(project) = &mut state.project {
+                    if let Some(track) = project.tracks.get_mut(state.cursor_track) {
+                        track.solo = !track.solo;
+                    }
+                }
+            }
+
+            Action::ArmTrack => {
+                if let Some(project) = &mut state.project {
+                    if let Some(track) = project.tracks.get_mut(state.cursor_track) {
+                        track.armed = !track.armed;
+                    }
+                }
+            }
+
+            // ── Arrange actions ───────────────────────────────────────
+            Action::EditItem => {
+                state.status_message = Some("piano roll not yet implemented".into());
             }
         }
     }

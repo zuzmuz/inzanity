@@ -8,7 +8,6 @@ pub struct Theme {
     pub track_colors: [Color; 8],
     pub mode_normal: Color,
     pub mode_insert: Color,
-    pub mode_visual: Color,
     pub mode_command: Color,
 }
 
@@ -31,7 +30,6 @@ impl Default for Theme {
             ],
             mode_normal: Color::Cyan,
             mode_insert: Color::Green,
-            mode_visual: Color::Magenta,
             mode_command: Color::Yellow,
         }
     }
@@ -43,7 +41,6 @@ impl Theme {
         match mode {
             Mode::Normal => self.mode_normal,
             Mode::Insert => self.mode_insert,
-            Mode::Visual => self.mode_visual,
             Mode::Command => self.mode_command,
         }
     }

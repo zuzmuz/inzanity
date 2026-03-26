@@ -7,21 +7,18 @@ use ratatui::{
 };
 
 use crate::domain::{project::Project, ticks::TICKS_PER_BEAT};
+use crate::state::panel::Panel;
 
 const TRACK_NAME_WIDTH: u16 = 20;
 
 pub struct ArrangementView<'a> {
     pub project: Option<&'a Project>,
-    /// Index of the currently selected track.
     pub cursor_track: usize,
-    /// First visible track index (vertical scroll).
     pub scroll_track: usize,
-    /// Leftmost visible tick (horizontal scroll).
     pub scroll_tick: u64,
-    /// Ticks represented by one terminal column (horizontal zoom).
     pub ticks_per_col: u64,
-    /// Rows per track (vertical zoom).
     pub track_height: u16,
+    pub focused_panel: Panel,
 }
 
 impl Widget for ArrangementView<'_> {
@@ -112,8 +109,12 @@ impl Widget for ArrangementView<'_> {
 
 impl ArrangementView<'_> {
     fn render_header(&self, name_area: Rect, timeline_area: Rect, buf: &mut Buffer) {
-        let header_style = Style::default().fg(Color::DarkGray);
-        buf.set_string(name_area.x, name_area.y, format!("{:<width$}", "  TRACK", width = TRACK_NAME_WIDTH as usize), header_style);
+        let (track_label_color, beat_marker_color) = match self.focused_panel {
+            Panel::TrackList => (Color::Cyan, Color::DarkGray),
+            Panel::Arrange  => (Color::DarkGray, Color::Cyan),
+        };
+        let header_style = Style::default().fg(track_label_color).add_modifier(Modifier::BOLD);
+        buf.set_string(name_area.x, name_area.y, format!("{:<width$}", "  TRACKS", width = TRACK_NAME_WIDTH as usize), header_style);
 
         // Beat markers
         let beats_visible = timeline_area.width as u64;
@@ -126,7 +127,7 @@ impl ArrangementView<'_> {
                 let label = format!("{}", beat + 1);
                 let x = timeline_area.x + col as u16;
                 if x + label.len() as u16 <= timeline_area.x + timeline_area.width {
-                    buf.set_string(x, timeline_area.y, &label, Style::default().fg(Color::DarkGray));
+                    buf.set_string(x, timeline_area.y, &label, Style::default().fg(beat_marker_color).add_modifier(Modifier::BOLD));
                 }
             }
         }

@@ -1,16 +1,18 @@
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Modifier, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::Widget,
 };
 
 use crate::state::mode::Mode;
+use crate::state::panel::Panel;
 use crate::ui::theme::Theme;
 
 pub struct CommandBar<'a> {
     pub mode: Mode,
+    pub panel: Panel,
     pub command_input: &'a str,
     pub status_message: Option<&'a str>,
     pub theme: &'a Theme,
@@ -20,6 +22,7 @@ impl Widget for CommandBar<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mode_color = self.theme.mode_color(&self.mode);
 
+        let panel_color = Color::DarkGray;
         let line = if self.mode == Mode::Command {
             Line::from(vec![
                 Span::styled(
@@ -28,7 +31,7 @@ impl Widget for CommandBar<'_> {
                 ),
                 Span::raw(" :"),
                 Span::raw(self.command_input),
-                Span::styled("█", Style::default().fg(mode_color)), // cursor block
+                Span::styled("█", Style::default().fg(mode_color)),
             ])
         } else {
             let right = match self.status_message {
@@ -39,6 +42,10 @@ impl Widget for CommandBar<'_> {
                 Span::styled(
                     format!(" {:^9} ", self.mode),
                     Style::default().fg(mode_color).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!(" {} ", self.panel),
+                    Style::default().fg(panel_color),
                 ),
                 right,
             ])

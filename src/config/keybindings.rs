@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crossterm::event::{KeyCode, KeyModifiers};
 
 use crate::state::mode::Mode;
+use crate::state::panel::Panel;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
@@ -26,13 +27,15 @@ impl KeyBinding {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
-    // Cursor movement
+    // Cursor / navigation
     MoveUp,
     MoveDown,
-    MoveLeft,
-    MoveRight,
 
-    // Scrolling (independent of cursor)
+    // Timeline scroll (Arrange panel)
+    ScrollTimelineLeft,
+    ScrollTimelineRight,
+
+    // Viewport scroll (global, Ctrl+d/u/f/b)
     ScrollUp,
     ScrollDown,
     ScrollLeft,
@@ -44,90 +47,99 @@ pub enum Action {
     ZoomInV,
     ZoomOutV,
 
+    // Panel switching
+    SwitchPanel,
+
     // Mode transitions
     EnterCommand,
     EnterInsert,
-    EnterVisual,
     ExitMode,
 
     // Transport
     TogglePlay,
 
-    // Project / track editing
+    // Track list actions
     AddTrack,
     DeleteTrack,
     RenameTrack,
+    MuteTrack,
+    SoloTrack,
+    ArmTrack,
+
+    // Arrange actions
+    EditItem,
 
     // App
     Quit,
     Confirm,
 }
 
-pub struct KeyMap(HashMap<(Mode, KeyBinding), Action>);
+pub struct KeyMap {
+    /// Panel-specific bindings active in Normal mode only.
+    panel_map: HashMap<(Panel, KeyBinding), Action>,
+    /// Bindings active regardless of panel, keyed by (Mode, KeyBinding).
+    global_map: HashMap<(Mode, KeyBinding), Action>,
+}
 
 impl KeyMap {
     pub fn default_bindings() -> Self {
-        let mut map: HashMap<(Mode, KeyBinding), Action> = HashMap::new();
+        let mut panel_map: HashMap<(Panel, KeyBinding), Action> = HashMap::new();
+        let mut global_map: HashMap<(Mode, KeyBinding), Action> = HashMap::new();
 
-        // Normal mode — cursor
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
+        // ── TrackList panel (Normal mode) ──────────────────────────────
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('a'))), Action::AddTrack);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('d'))), Action::DeleteTrack);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('r'))), Action::RenameTrack);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('m'))), Action::MuteTrack);
+        panel_map.insert((Panel::TrackList, KeyBinding::new(KeyCode::Char('s'))), Action::SoloTrack);
+        panel_map.insert((Panel::TrackList, KeyBinding::shift(KeyCode::Char('a'))), Action::ArmTrack);
 
-        // Normal mode — scroll viewport (Ctrl+d/u/f/b, vim-style)
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('d'))), Action::ScrollDown);
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('u'))), Action::ScrollUp);
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('f'))), Action::ScrollRight);
-        map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('b'))), Action::ScrollLeft);
+        // ── Arrange panel (Normal mode) ────────────────────────────────
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('h'))), Action::ScrollTimelineLeft);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('l'))), Action::ScrollTimelineRight);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('='))), Action::ZoomInH);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('-'))), Action::ZoomOutH);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('+'))), Action::ZoomInV);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Char('_'))), Action::ZoomOutV);
+        panel_map.insert((Panel::Arrange, KeyBinding::new(KeyCode::Enter)), Action::EditItem);
 
-        // Normal mode — horizontal zoom (= zoom in, - zoom out)
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('='))), Action::ZoomInH);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('-'))), Action::ZoomOutH);
+        // ── Global — Normal mode ───────────────────────────────────────
+        global_map.insert((Mode::Normal, KeyBinding::new(KeyCode::Tab)), Action::SwitchPanel);
+        global_map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(' '))), Action::TogglePlay);
+        global_map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
+        global_map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('q'))), Action::Quit);
+        global_map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('d'))), Action::ScrollDown);
+        global_map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('u'))), Action::ScrollUp);
+        global_map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('f'))), Action::ScrollRight);
+        global_map.insert((Mode::Normal, KeyBinding::ctrl(KeyCode::Char('b'))), Action::ScrollLeft);
 
-        // Normal mode — vertical zoom (+ / _)
-        // Shift+= sends '+', Shift+- sends '_' — bind the resulting chars directly
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('+'))), Action::ZoomInV);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('_'))), Action::ZoomOutV);
+        // ── Global — Insert mode ───────────────────────────────────────
+        global_map.insert((Mode::Insert, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
 
-        // Normal mode — track editing
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('a'))), Action::AddTrack);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('r'))), Action::RenameTrack);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('d'))), Action::DeleteTrack);
+        // ── Global — Command mode ──────────────────────────────────────
+        global_map.insert((Mode::Command, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
+        global_map.insert((Mode::Command, KeyBinding::new(KeyCode::Enter)), Action::Confirm);
 
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(':'))), Action::EnterCommand);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('i'))), Action::EnterInsert);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('v'))), Action::EnterVisual);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char(' '))), Action::TogglePlay);
-        map.insert((Mode::Normal, KeyBinding::new(KeyCode::Char('q'))), Action::Quit);
-
-        // Insert mode
-        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
-        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
-        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
-        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
-        map.insert((Mode::Insert, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
-
-        // Visual mode
-        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
-        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('j'))), Action::MoveDown);
-        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('k'))), Action::MoveUp);
-        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('h'))), Action::MoveLeft);
-        map.insert((Mode::Visual, KeyBinding::new(KeyCode::Char('l'))), Action::MoveRight);
-
-        // Command mode
-        map.insert((Mode::Command, KeyBinding::new(KeyCode::Esc)), Action::ExitMode);
-        map.insert((Mode::Command, KeyBinding::new(KeyCode::Enter)), Action::Confirm);
-
-        // Ctrl-C quits from any mode
-        for mode in [Mode::Normal, Mode::Insert, Mode::Visual, Mode::Command] {
-            map.insert((mode, KeyBinding::ctrl(KeyCode::Char('c'))), Action::Quit);
+        // ── Ctrl-C quits from any mode ─────────────────────────────────
+        for mode in [Mode::Normal, Mode::Insert, Mode::Command] {
+            global_map.insert((mode, KeyBinding::ctrl(KeyCode::Char('c'))), Action::Quit);
         }
 
-        Self(map)
+        Self { panel_map, global_map }
     }
 
-    pub fn get(&self, mode: Mode, code: KeyCode, modifiers: KeyModifiers) -> Option<Action> {
-        self.0.get(&(mode, KeyBinding { code, modifiers })).copied()
+    pub fn get(&self, panel: Panel, mode: Mode, code: KeyCode, modifiers: KeyModifiers) -> Option<Action> {
+        let binding = KeyBinding { code, modifiers };
+        // Panel-specific bindings only active in Normal mode
+        if mode == Mode::Normal {
+            if let Some(action) = self.panel_map.get(&(panel, binding)) {
+                return Some(*action);
+            }
+        }
+        self.global_map.get(&(mode, binding)).copied()
     }
 }

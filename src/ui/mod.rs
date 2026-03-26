@@ -43,6 +43,7 @@ pub fn render(frame: &mut Frame, state: &AppState, theme: &Theme) {
             scroll_tick: state.scroll_tick,
             ticks_per_col: state.ticks_per_col,
             track_height: state.track_height,
+            focused_panel: state.panel,
         },
         areas[1],
     );
@@ -50,6 +51,7 @@ pub fn render(frame: &mut Frame, state: &AppState, theme: &Theme) {
     frame.render_widget(
         CommandBar {
             mode: state.mode,
+            panel: state.panel,
             command_input: &state.command_input,
             status_message: state.status_message.as_deref(),
             theme,
