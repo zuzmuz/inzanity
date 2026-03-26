@@ -66,10 +66,14 @@ impl Widget for ArrangementView<'_> {
                 Style::default()
             };
 
-            // Track name cell (first row of the track's block)
+            // Clip height to the area boundary so we never write past it
+            let area_bottom = tracks_name_area.y + tracks_name_area.height;
+            let row_y = tracks_name_area.y + y_offset;
+            let clipped_height = th.min(area_bottom.saturating_sub(row_y));
+
             let name_row = Rect {
-                y: tracks_name_area.y + y_offset,
-                height: th,
+                y: row_y,
+                height: clipped_height,
                 ..tracks_name_area
             };
             let indent = "  ".repeat(track.depth as usize);
@@ -82,7 +86,7 @@ impl Widget for ArrangementView<'_> {
             );
             let truncated = truncate_str(&label, TRACK_NAME_WIDTH as usize);
             // Fill all rows of the name cell
-            for row in 0..th {
+            for row in 0..clipped_height {
                 let row_y = name_row.y + row;
                 if row_y >= tracks_name_area.y + tracks_name_area.height {
                     break;
@@ -95,10 +99,10 @@ impl Widget for ArrangementView<'_> {
                 buf.set_string(name_row.x, row_y, content, row_style);
             }
 
-            // Timeline rows
+            // Timeline rows — same clipping as name area
             let timeline_row = Rect {
                 y: tracks_timeline_area.y + y_offset,
-                height: th,
+                height: clipped_height,
                 ..tracks_timeline_area
             };
             self.render_track_items(track, timeline_row, is_selected, i, buf);

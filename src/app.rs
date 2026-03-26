@@ -24,6 +24,14 @@ pub struct AppState {
     pub track_height: u16,
     pub command_input: String,
     pub status_message: Option<String>,
+    /// Updated each frame by the renderer; used to keep cursor in view.
+    pub viewport_track_rows: u16,
+}
+
+impl AppState {
+    pub fn visible_tracks(&self) -> usize {
+        (self.viewport_track_rows / self.track_height.max(1)) as usize
+    }
 }
 
 impl Default for AppState {
@@ -35,10 +43,11 @@ impl Default for AppState {
             cursor_track: 0,
             scroll_tick: 0,
             scroll_track: 0,
-            ticks_per_col: TICKS_PER_BEAT / 4, // sixteenth note per column
+            ticks_per_col: TICKS_PER_BEAT / 4,
             track_height: 1,
             command_input: String::new(),
             status_message: None,
+            viewport_track_rows: 20, // sensible default until first frame
         }
     }
 }
@@ -160,6 +169,10 @@ impl App {
             Action::MoveDown => {
                 if track_count > 0 {
                     state.cursor_track = (state.cursor_track + 1).min(track_count - 1);
+                    // Scroll viewport to follow cursor downward
+                    if state.cursor_track >= state.scroll_track + state.visible_tracks() {
+                        state.scroll_track = state.cursor_track + 1 - state.visible_tracks();
+                    }
                 }
             }
             Action::MoveLeft => {
